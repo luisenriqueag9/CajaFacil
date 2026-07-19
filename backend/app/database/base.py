@@ -11,6 +11,5 @@ class Base(DeclarativeBase):
 
 # Note: For Alembic migrations autogenerate to work, all domain models
 # from modules should be imported here so Alembic gathers their metadata.
-#
-# Example:
-# from app.modules.product.data.models import ProductModel # noqa: F401
+from app.modules.product.data.models import Product  # noqa: F401
+
