@@ -6,13 +6,13 @@ from sqlalchemy.sql import func
 
 from app.database.base import Base
 
-class Category(Base):
-    __tablename__ = "category"
+class Brand(Base):
+    __tablename__ = "brand"
 
     # Primary Key
     id: Mapped[UUID] = mapped_column(SqlUUID, primary_key=True, default=uuid4)
     
-    # Context field
+    # Context field (mandatory)
     company_id: Mapped[UUID] = mapped_column(
         SqlUUID, 
         ForeignKey("company.id", ondelete="RESTRICT"), 
@@ -24,13 +24,6 @@ class Category(Base):
     code: Mapped[str] = mapped_column(String(50), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    
-    # Hierarchical link (stored as UUID with physical foreign keys for consistency)
-    parent_id: Mapped[UUID | None] = mapped_column(
-        SqlUUID, 
-        ForeignKey("category.id", ondelete="RESTRICT"), 
-        nullable=True
-    )
     
     # Flags and administrative configuration
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="ACTIVE")
@@ -50,6 +43,6 @@ class Category(Base):
 
     # Unique constraints within the company context
     __table_args__ = (
-        UniqueConstraint("company_id", "code", name="uq_category_company_code"),
-        UniqueConstraint("company_id", "name", name="uq_category_company_name"),
+        UniqueConstraint("company_id", "code", name="uq_brand_company_code"),
+        UniqueConstraint("company_id", "name", name="uq_brand_company_name"),
     )

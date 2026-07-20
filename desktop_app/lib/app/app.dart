@@ -16,7 +16,7 @@ class CajaFacilApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark, // SaaS dark aesthetic preference
+      themeMode: ThemeMode.system,
       routerConfig: router,
     );
   }

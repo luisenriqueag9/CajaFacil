@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -66,7 +65,7 @@ class _LoginPageState extends State<LoginPage> {
           Expanded(
             flex: 5,
             child: Container(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               padding: const EdgeInsets.all(AppSpacing.xxl),
               child: const _LoginBrandSection(),
             ),
@@ -74,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
           Expanded(
             flex: 4,
             child: Container(
-              color: AppColors.background,
+              color: Theme.of(context).scaffoldBackgroundColor,
               padding: const EdgeInsets.all(AppSpacing.xxl),
               child: Center(
                 child: _LoginFormCard(
@@ -112,9 +111,9 @@ class _LoginBrandSection extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppRadius.large),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.point_of_sale_rounded,
-                color: AppColors.primary,
+                color: Theme.of(context).colorScheme.primary,
                 size: 30,
               ),
             ),

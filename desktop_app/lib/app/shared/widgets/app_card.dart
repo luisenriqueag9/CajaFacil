@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_shadows.dart';
 import '../../core/theme/app_spacing.dart';
@@ -30,10 +29,12 @@ class AppCard extends StatelessWidget {
       height: height,
       padding: padding,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(
-          color: const Color(0xFFE2E8F0),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF2E2E3E)
+              : const Color(0xFFE2E8F0),
         ),
         boxShadow: showShadow ? AppShadows.small : null,
       ),

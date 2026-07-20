@@ -1,71 +1,107 @@
 # 04_DOMINIO_PRODUCTO.md
 
-Versión: 1.0
-Estado: Aprobado
-Última actualización: 2026-07-18
-Documento: Dominio Producto
+**Versión:** 2.0  
+**Estado:** Aprobado (Revisión Arquitectónica)  
+**Última actualización:** 2026-07-19  
+**Documento:** Dominio Producto
 
 # Dominio Producto
 
 ## Objetivo
 
-Administrar toda la información relacionada con los productos comercializados por el negocio.
+El Dominio Producto administra el **catálogo maestro** de productos de CajaFácil.
 
-Este dominio será responsable de la creación, actualización, consulta y control de los productos, garantizando la integridad de su información y proporcionando los datos necesarios para los demás dominios del sistema.
+Su responsabilidad es mantener la información comercial de los productos de forma consistente, independiente del inventario, las compras y las ventas.
+
+El dominio Producto **no administra existencias** ni dinero.
+
+---
+
+# Propósito dentro de la arquitectura
+
+Producto es un **Maestro de Datos (Master Data)**.
+
+Otros dominios consultan esta información, pero no la modifican directamente.
+
+Este dominio es la única fuente autorizada para:
+
+- Nombre del producto.
+- Código interno.
+- Códigos de barras.
+- Categoría.
+- Marca.
+- Unidad de medida.
+- Precio de venta.
+- Configuración comercial.
+
+---
+
+# Aggregate Root
+
+**Producto**
+
+Toda modificación deberá realizarse a través del Aggregate Root Producto.
 
 ---
 
 # Responsabilidades
 
-El dominio Producto será responsable de:
-
-- Registrar productos.
-- Modificar productos.
+- Crear productos.
+- Actualizar productos.
 - Consultar productos.
-- Activar productos.
-- Desactivar productos.
+- Activar y desactivar productos.
 - Administrar códigos de barras.
-- Administrar precios.
-- Administrar costos.
+- Administrar precios de venta.
+- Administrar costo de referencia.
 - Administrar impuestos.
-- Administrar categorías.
-- Administrar marcas.
-- Administrar unidades de medida.
-- Definir si un producto controla inventario.
-- Definir si un producto permite cantidades decimales.
-- Definir si un producto es perecedero.
+- Administrar categoría, marca y unidad.
+- Definir si controla inventario.
+- Definir si permite cantidades decimales.
+- Definir si es perecedero.
 
 ---
 
-# Lo que NO hace
+# Responsabilidades prohibidas
 
-Este dominio NO será responsable de:
+Este dominio nunca deberá:
 
-- Descontar existencias.
-- Aumentar existencias.
+- Modificar existencias.
 - Registrar compras.
 - Registrar ventas.
-- Registrar mermas.
-- Calcular utilidades.
 - Registrar movimientos de inventario.
-
-Todas esas responsabilidades pertenecen a otros dominios.
-
----
-
-# Entidad Principal
-
-## Producto
-
-Representa un artículo que puede comprarse, almacenarse y venderse.
+- Registrar movimientos de caja.
+- Calcular utilidades históricas.
+- Realizar arqueos.
+- Registrar créditos.
 
 ---
 
-# Atributos del Producto
+# Entidades
 
-Cada producto tendrá como mínimo los siguientes atributos:
+## Producto (Aggregate Root)
 
-- Id
+Representa un artículo comercial disponible para compra y/o venta.
+
+## Código de Barras
+
+Permite asociar uno o varios códigos de barras a un mismo producto.
+
+---
+
+# Value Objects
+
+- Precio
+- Costo
+- Impuesto
+- Unidad de Medida
+
+---
+
+# Atributos mínimos del Producto
+
+- Id global (UUID)
+- Id local
+- Empresa
 - Código interno
 - Nombre
 - Descripción
@@ -73,134 +109,103 @@ Cada producto tendrá como mínimo los siguientes atributos:
 - Marca
 - Unidad de medida
 - Precio de venta
-- Costo
+- Costo de referencia
 - Impuesto
 - Existencia mínima
-- Controla inventario (Sí/No)
-- Permite cantidades decimales (Sí/No)
-- Perecedero (Sí/No)
+- Controla inventario
+- Permite cantidades decimales
+- Perecedero
 - Imagen
-- Estado (Activo/Inactivo)
+- Estado
 - Fecha de creación
 - Fecha de modificación
 - Usuario creador
 - Usuario modificador
+- Versión para sincronización
 
 ---
 
-# Reglas de Negocio
+# Reglas de negocio
 
 ## RN-001
-
-Todo producto deberá tener un nombre.
-
----
+Todo producto debe pertenecer a una empresa.
 
 ## RN-002
-
-Todo producto deberá tener un precio de venta mayor que cero.
-
----
+Todo producto debe tener un nombre.
 
 ## RN-003
-
-Todo producto deberá pertenecer a una unidad de medida.
-
----
+Todo producto debe tener una unidad de medida.
 
 ## RN-004
-
-Un producto podrá tener uno o varios códigos de barras.
-
----
+El precio de venta debe ser mayor que cero.
 
 ## RN-005
-
-El código interno deberá ser único.
-
----
+El costo nunca puede ser negativo.
 
 ## RN-006
-
-Un producto podrá desactivar el control de inventario.
-
-Ejemplos:
-
-- Servicio de instalación.
-- Servicio técnico.
-- Recarga telefónica.
-
----
+El código interno debe ser único por empresa.
 
 ## RN-007
-
-Si el producto controla inventario, podrá tener existencia mínima.
-
----
+Un producto puede tener múltiples códigos de barras.
 
 ## RN-008
-
-Los productos con historial nunca podrán eliminarse físicamente.
-
-Únicamente podrán desactivarse.
-
----
+Los productos con historial nunca se eliminan físicamente.
 
 ## RN-009
-
-Un producto inactivo no podrá venderse.
-
----
+Los productos inactivos no pueden venderse.
 
 ## RN-010
+Si controla inventario podrá definir existencia mínima.
 
-Un producto perecedero podrá utilizar posteriormente fechas de vencimiento cuando esa funcionalidad sea incorporada.
+## RN-011
+El costo almacenado es únicamente una referencia comercial. El historial pertenece al dominio Compras.
+
+## RN-012
+Cambiar el precio no modifica ventas históricas.
 
 ---
 
-# Casos de Uso
+# Casos de uso
 
-- Crear producto.
-- Editar producto.
-- Consultar producto.
-- Buscar producto.
-- Activar producto.
-- Desactivar producto.
-- Consultar precio.
-- Consultar costo.
-- Consultar códigos de barras.
+- CrearProducto
+- ActualizarProducto
+- ConsultarProducto
+- BuscarProductos
+- ActivarProducto
+- DesactivarProducto
+- CambiarPrecio
+- CambiarCostoReferencia
+- AgregarCodigoBarras
+- EliminarCodigoBarras
 
 ---
 
 # Validaciones
 
-Antes de guardar un producto el sistema deberá validar:
-
 - Nombre obligatorio.
+- Unidad obligatoria.
 - Precio válido.
-- Unidad de medida obligatoria.
-- Código interno único.
-- Precio mayor que cero.
-- Costo mayor o igual que cero.
+- Costo válido.
+- Código interno único por empresa.
+- Categoría obligatoria.
+- Marca opcional.
+- Imagen opcional.
 
 ---
 
-# Eventos del Dominio
-
-Este dominio podrá generar los siguientes eventos:
+# Eventos de dominio
 
 - ProductoCreado
 - ProductoActualizado
 - ProductoActivado
 - ProductoDesactivado
-- PrecioActualizado
-- CostoActualizado
+- PrecioProductoActualizado
+- CostoReferenciaActualizado
+- CodigoBarrasAgregado
 
 ---
 
 # Permisos
-
-El sistema deberá controlar como mínimo los siguientes permisos:
 
 - Crear productos.
 - Modificar productos.
@@ -214,167 +219,155 @@ El sistema deberá controlar como mínimo los siguientes permisos:
 
 # Auditoría
 
-Las siguientes operaciones deberán registrarse:
+Registrar:
 
 - Creación.
 - Modificación.
 - Cambio de precio.
 - Cambio de costo.
+- Cambio de categoría.
+- Cambio de marca.
 - Activación.
 - Desactivación.
 
-La auditoría deberá almacenar:
+Cada registro deberá almacenar:
 
-- Usuario.
-- Fecha.
-- Hora.
-- Acción.
-- Valor anterior.
-- Valor nuevo.
+- Empresa
+- Usuario
+- Fecha y hora
+- Acción
+- Valor anterior
+- Valor nuevo
 
 ---
 
-# Relación con otros dominios
+# Relaciones con otros dominios
 
 ## Inventario
 
-Consulta información del producto.
+Consulta productos.
 
 Nunca modifica productos.
-
----
 
 ## Compras
 
-Consulta el costo.
-
-Puede actualizar el costo promedio en futuras versiones.
-
----
+Consulta el catálogo y puede solicitar la actualización del costo de referencia mediante un caso de uso autorizado.
 
 ## Ventas
 
-Consulta:
-
-- Nombre.
-- Precio.
-- Impuesto.
-- Estado.
-- Unidad.
+Consulta precio, impuesto, estado y configuración del producto.
 
 Nunca modifica productos.
 
----
-
 ## Caja
 
-No tiene relación directa.
-
----
+Sin relación directa.
 
 ## Clientes
 
-No tiene relación directa.
+Sin relación directa.
 
 ---
 
-# Consideraciones para Base de Datos
+# Persistencia
 
-Tabla principal:
+## Tabla principal
 
 producto
 
-Relaciones iniciales:
+## Tablas relacionadas
 
+- producto_codigo_barra
 - categoria
 - marca
 - unidad_medida
 
-Índices recomendados:
+## Índices recomendados
 
-- codigo_interno
-- nombre
+- empresa_id + codigo_interno (único)
+- empresa_id + nombre
 - estado
 
 ---
 
-# Consideraciones para API
+# API
 
-Operaciones principales:
+Operaciones:
 
-- Crear producto.
-- Actualizar producto.
-- Consultar producto.
-- Buscar productos.
-- Activar producto.
-- Desactivar producto.
-
----
-
-# Consideraciones para la Interfaz
-
-La pantalla de productos deberá permitir:
-
-- Buscar rápidamente.
-- Crear productos.
-- Editar productos.
-- Activar o desactivar productos.
-- Ver precio.
-- Ver costo.
-- Ver existencia (solo consulta).
-- Ver estado.
+- Crear
+- Actualizar
+- Consultar
+- Buscar
+- Activar
+- Desactivar
 
 ---
 
-# Decisiones Arquitectónicas
+# Interfaz
+
+Debe permitir:
+
+- Búsqueda inmediata.
+- Escáner de código de barras.
+- Activar/desactivar.
+- Vista rápida de precio.
+- Vista rápida de costo.
+- Estado.
+- Indicador de control de inventario.
+
+---
+
+# Decisiones arquitectónicas
 
 ## DP-001
 
-Los productos nunca serán eliminados físicamente cuando tengan historial.
-
-Estado:
-
-Aprobada.
-
----
+Los productos nunca se eliminan físicamente cuando existe historial.
 
 ## DP-002
 
-El dominio Producto nunca modificará existencias.
-
-Estado:
-
-Aprobada.
-
----
+El Dominio Producto nunca modifica existencias.
 
 ## DP-003
 
-El dominio Producto será únicamente responsable de la información maestra del producto.
+Producto es un Maestro de Datos.
 
-Estado:
+## DP-004
 
-Aprobada.
+Todo cambio deberá realizarse únicamente mediante el Aggregate Root Producto.
+
+## DP-005
+
+Los demás dominios consumen Producto mediante casos de uso o repositorios del dominio, nunca mediante acceso directo a la base de datos.
 
 ---
 
-# Pendientes para futuras versiones
+# Evolución futura
 
 - Productos compuestos.
 - Kits.
-- Variantes (talla, color).
+- Variantes.
 - Lotes.
+- Series.
 - Fechas de vencimiento.
 - Múltiples listas de precios.
 - Promociones.
 - Precios por cliente.
+- Precios por sucursal.
+
+---
+
+# Reglas para Antigravity
+
+Al generar código deberá respetarse:
+
+- Producto es Aggregate Root.
+- Ninguna operación modifica inventario desde este dominio.
+- Todo acceso se realiza mediante casos de uso.
+- Los eventos del dominio son el mecanismo oficial para comunicar cambios.
+- Nunca duplicar reglas de negocio en Presentation o Infrastructure.
 
 ---
 
 # Observaciones
 
-El dominio Producto representa el catálogo maestro del negocio.
-
-Toda modificación relacionada con existencias deberá realizarse exclusivamente mediante el Dominio Inventario.
-
-Este principio garantiza la integridad de la información y evita inconsistencias entre el catálogo de productos y el inventario.
+Producto es un dominio maestro. La información transaccional pertenece a Inventario, Compras, Ventas y Caja. Esta separación garantiza coherencia, facilita la sincronización Offline First y reduce el acoplamiento entre módulos.

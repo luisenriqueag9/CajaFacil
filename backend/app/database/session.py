@@ -28,7 +28,7 @@ if settings.DB_PROVIDER == "sqlite":
     def set_sqlite_pragma(dbapi_connection, connection_record):
         if not hasattr(dbapi_connection, "cursor"):
             logger.error(f"dbapi_connection type: {type(dbapi_connection)}, dir: {dir(dbapi_connection)}")
-            # If it's a wrapper, we can check if it has a cursor attribute or if the underlying connection is elsewhere
+            return
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()

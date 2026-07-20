@@ -1,8 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
-from sqlalchemy import String, Text, Numeric, Boolean, DateTime, UniqueConstraint, CheckConstraint, UUID as SqlUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Text, Numeric, Boolean, DateTime, UniqueConstraint, CheckConstraint, UUID as SqlUUID, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.database.base import Base
@@ -13,8 +13,13 @@ class Product(Base):
     # Primary Key
     id: Mapped[UUID] = mapped_column(SqlUUID, primary_key=True, default=uuid4)
     
-    # Context field
-    company_id: Mapped[UUID] = mapped_column(SqlUUID, nullable=False, index=True)
+    # Context field (linked via physical Foreign Key)
+    company_id: Mapped[UUID] = mapped_column(
+        SqlUUID, 
+        ForeignKey("company.id", ondelete="RESTRICT"), 
+        nullable=False, 
+        index=True
+    )
     
     # Identifiers
     internal_code: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -24,10 +29,28 @@ class Product(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     
-    # Domain categorization references (without physical foreign keys at this stage)
-    category_id: Mapped[UUID | None] = mapped_column(SqlUUID, nullable=True)
-    brand_id: Mapped[UUID | None] = mapped_column(SqlUUID, nullable=True)
-    unit_id: Mapped[UUID] = mapped_column(SqlUUID, nullable=False)
+    # Domain categorization references (linked via physical Foreign Keys)
+    category_id: Mapped[UUID] = mapped_column(
+        SqlUUID, 
+        ForeignKey("category.id", ondelete="RESTRICT"), 
+        nullable=False
+    )
+    brand_id: Mapped[UUID] = mapped_column(
+        SqlUUID, 
+        ForeignKey("brand.id", ondelete="RESTRICT"), 
+        nullable=False
+    )
+    unit_id: Mapped[UUID] = mapped_column(
+        SqlUUID, 
+        ForeignKey("unit.id", ondelete="RESTRICT"), 
+        nullable=False
+    )
+
+    # Relationships
+    company: Mapped["Company"] = relationship()
+    category: Mapped["Category"] = relationship()
+    brand: Mapped["Brand"] = relationship()
+    unit: Mapped["Unit"] = relationship()
     
     # Financial metrics
     cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)

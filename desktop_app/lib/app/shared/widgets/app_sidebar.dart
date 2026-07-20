@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 
@@ -18,7 +17,7 @@ class AppSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 250,
-      color: AppColors.primary,
+      color: Theme.of(context).colorScheme.primary,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -112,9 +111,9 @@ class _SidebarHeader extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
-          child: const Icon(
+          child: Icon(
             Icons.point_of_sale_rounded,
-            color: AppColors.primary,
+            color: Theme.of(context).colorScheme.primary,
             size: 26,
           ),
         ),

@@ -1,8 +1,8 @@
 # 00_MANIFIESTO_CAJA_FACIL.md
 
-**Versión:** 1.0  
+**Versión:** 1.1  
 **Estado:** ✅ APROBADO  
-**Última actualización:** 2026-07-18
+**Última actualización:** 2026-07-19
 
 ---
 
@@ -28,7 +28,7 @@ La tecnología debe trabajar para el comerciante, no al contrario.
 
 # Visión
 
-Construir una plataforma comercial capaz de adaptarse a diferentes tipos de negocios utilizando una única arquitectura, permitiendo que cada empresa crezca sin necesidad de cambiar de sistema.
+Construir una plataforma comercial **modular**, capaz de adaptarse a diferentes tipos de negocios utilizando una única arquitectura, permitiendo que cada empresa crezca sin necesidad de cambiar de sistema.
 
 CajaFácil debe evolucionar junto con sus clientes.
 
@@ -40,17 +40,25 @@ CajaFácil debe evolucionar junto con sus clientes.
 
 La facilidad de uso siempre tendrá prioridad sobre la complejidad innecesaria.
 
+---
+
 ## Calidad
 
 Preferimos desarrollar menos funcionalidades, pero desarrollarlas correctamente.
+
+---
 
 ## Confianza
 
 La información del negocio es uno de los activos más importantes del cliente y debe protegerse con integridad, seguridad y trazabilidad.
 
+---
+
 ## Evolución
 
 CajaFácil debe crecer junto con el negocio sin obligar al cliente a migrar a otro sistema.
+
+---
 
 ## Profesionalismo
 
@@ -144,6 +152,34 @@ El usuario debe sentir que CajaFácil es simple, aunque internamente sea un sist
 
 ---
 
+## 12. Offline First
+
+CajaFácil debe continuar operando aun cuando no exista conexión a Internet.
+
+La sincronización con la nube es una capacidad del sistema, no un requisito para vender.
+
+El comerciante nunca debe detener su negocio por depender de Internet.
+
+---
+
+## 13. Multiempresa por diseño
+
+CajaFácil fue diseñado como una plataforma SaaS multiempresa.
+
+Toda la información pertenece a una empresa y nunca debe mezclarse con la de otra.
+
+El aislamiento entre empresas forma parte de la arquitectura del sistema.
+
+---
+
+## 14. Las reglas del negocio gobiernan la tecnología
+
+La arquitectura, la base de datos y el código deben adaptarse al negocio.
+
+Nunca se modificará una regla del negocio únicamente para simplificar el desarrollo técnico.
+
+---
+
 # Cómo tomamos decisiones
 
 Antes de implementar cualquier funcionalidad responderemos las siguientes preguntas:
@@ -158,6 +194,32 @@ Si alguna respuesta no es clara, la funcionalidad deberá revisarse antes de des
 
 ---
 
+# Filosofía de desarrollo
+
+CajaFácil se desarrolla siguiendo siempre este orden:
+
+```text
+Negocio
+      ↓
+Reglas de Negocio
+      ↓
+Arquitectura
+      ↓
+Base de Datos
+      ↓
+Backend
+      ↓
+Frontend
+      ↓
+Pruebas
+```
+
+Nunca desarrollaremos una funcionalidad comenzando por la interfaz.
+
+El código será siempre la consecuencia de una buena arquitectura y de reglas de negocio bien definidas.
+
+---
+
 # Lo que nunca haremos
 
 CajaFácil nunca deberá:
@@ -168,6 +230,9 @@ CajaFácil nunca deberá:
 - Eliminar información importante sin dejar historial.
 - Crear versiones distintas del mismo sistema para diferentes tipos de negocio.
 - Sacrificar estabilidad por agregar funciones innecesarias.
+- Modificar inventario directamente sin registrar un movimiento.
+- Modificar el saldo de caja directamente sin registrar un movimiento.
+- Mezclar información entre diferentes empresas.
 
 ---
 
@@ -175,7 +240,7 @@ CajaFácil nunca deberá:
 
 Cada decisión tomada dentro de CajaFácil tendrá un único propósito:
 
-**Hacer que administrar un negocio sea más fácil sin comprometer la calidad, la seguridad ni la evolución del sistema.**
+**Hacer que administrar un negocio sea más fácil, rápido y seguro, construyendo una plataforma preparada para evolucionar durante muchos años sin perder estabilidad.**
 
 ---
 
@@ -192,6 +257,19 @@ Antes de aprobar cualquier nueva funcionalidad, el equipo deberá hacerse una ú
 > **¿Esta decisión hace que CajaFácil sea más simple para el comerciante sin debilitar la arquitectura?**
 
 Si la respuesta es **Sí**, vamos por el camino correcto.
+
+---
+
+# Compromiso del Equipo de Desarrollo
+
+Todo integrante del proyecto deberá entender que:
+
+- El negocio tiene prioridad sobre la tecnología.
+- La arquitectura tiene prioridad sobre la velocidad de desarrollo.
+- La mantenibilidad tiene prioridad sobre las soluciones rápidas.
+- La consistencia tiene prioridad sobre la improvisación.
+- Cada módulo deberá poder mantenerse y evolucionar de forma independiente.
+- Toda decisión debe contribuir a que CajaFácil pueda crecer durante muchos años sin perder calidad.
 
 ---
 

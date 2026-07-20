@@ -1,127 +1,104 @@
 # 03_DICCIONARIO_DEL_NEGOCIO.md
 
-Versión: 1.0
-Estado: Aprobado
-Última actualización: 2026-07-18
-Documento: Diccionario del Negocio
+**Versión:** 2.0  
+**Estado:** Aprobado (Revisión Arquitectónica)  
+**Última actualización:** 2026-07-19  
+**Documento:** Diccionario del Negocio (Lenguaje Ubicuo)
 
-# Diccionario del Negocio
+# Diccionario del Negocio de CajaFácil
 
 ## Objetivo
 
-Definir el lenguaje oficial de CajaFácil.
+Definir el lenguaje oficial de CajaFácil para que negocio, arquitectura, desarrollo, base de datos, documentación y pruebas utilicen exactamente los mismos conceptos.
 
-Este documento establece los términos que deberán utilizarse de forma consistente en la documentación, el código, la base de datos y la interfaz de usuario.
-
-Su propósito es evitar ambigüedades y garantizar que todas las personas involucradas en el proyecto utilicen el mismo vocabulario.
+Este documento constituye el **Lenguaje Ubicuo (Ubiquitous Language)** del proyecto.
 
 ---
 
 # Principios
 
-- Un concepto debe tener un único nombre oficial.
-- Evitar sinónimos para el mismo concepto.
-- La interfaz utilizará términos sencillos para el comerciante.
-- El código utilizará nombres claros y consistentes.
-- La base de datos utilizará nombres en singular y en minúsculas.
+- Un concepto tiene un único nombre oficial.
+- Evitar sinónimos.
+- El lenguaje del negocio gobierna el diseño del software.
+- Toda nueva funcionalidad deberá utilizar los términos definidos aquí.
+- Ningún término oficial podrá cambiarse sin evaluar su impacto.
 
 ---
 
-# Términos oficiales
+# Organización por dominios
 
 ## Empresa
 
-Representa el negocio propietario de la información almacenada en CajaFácil.
+### Empresa
 
-Ejemplos:
+**Definición**
 
-- Pulpería El Centro
-- Ferretería Ortiz
-- Minisúper López
+Negocio propietario de la información almacenada en CajaFácil.
+
+**Responsabilidades**
+
+- Configuración general.
+- Propiedad de los datos.
+- Aislamiento multiempresa.
+
+**Relacionado con**
+
+Usuarios, Productos, Ventas, Compras, Caja.
 
 ---
 
-## Usuario
+## Seguridad
+
+### Usuario
 
 Persona autorizada para utilizar el sistema.
 
-Ejemplos:
-
-- Administrador
-- Supervisor
-- Cajero
-
----
-
-## Rol
+### Rol
 
 Conjunto de permisos asignados a un usuario.
 
-Ejemplos:
+### Permiso
 
-- Administrador
-- Supervisor
-- Cajero
+Autorización para ejecutar una acción específica.
 
 ---
 
-## Permiso
+## Catálogo
 
-Autorización para realizar una acción específica dentro del sistema.
+### Producto
 
-Ejemplos:
+Artículo comercial que puede comprarse, almacenarse y venderse.
 
-- Registrar ventas
-- Cambiar precios
-- Anular ventas
+**Genera**
 
----
+- Movimientos de inventario (indirectamente mediante operaciones).
 
-## Producto
+**No debe**
 
-Artículo comercial que puede comprarse, almacenarse o venderse.
+- Modificar existencias directamente.
 
-Ejemplos:
+**Relacionado con**
 
-- Coca-Cola 2 L
-- Martillo
-- Arroz
+- Categoría
+- Marca
+- Unidad
+- Proveedor
 
-La palabra oficial será **Producto**.
+**Sinónimos prohibidos**
 
-No se utilizarán términos como:
-
-- Artículo
-- Ítem
-- Mercancía
+Artículo, Ítem, Mercancía.
 
 ---
 
-## Categoría
+### Categoría
 
-Grupo utilizado para clasificar productos.
+Agrupa productos con características similares.
 
-Ejemplos:
+### Marca
 
-- Bebidas
-- Abarrotes
-- Herramientas
+Fabricante o identificación comercial de un producto.
 
----
-
-## Marca
-
-Fabricante o marca comercial del producto.
-
-Ejemplos:
-
-- Coca-Cola
-- Bosch
-- Corona
-
----
-
-## Unidad de medida
+### Unidad de Medida
 
 Unidad utilizada para controlar cantidades.
 
@@ -136,236 +113,188 @@ Ejemplos:
 
 ## Inventario
 
-Conjunto de existencias disponibles de los productos.
+### Inventario
 
----
+Conjunto de existencias administradas por el sistema.
 
-## Movimiento de inventario
+### Existencia
 
-Registro que modifica la existencia de un producto.
+Cantidad disponible de un producto.
 
-Ejemplos:
+### Movimiento de Inventario
+
+Registro histórico que incrementa o disminuye existencias.
+
+**Ejemplos**
 
 - Compra
 - Venta
 - Ajuste
 - Merma
+- Devolución
+
+### Merma
+
+Pérdida de inventario por daño, vencimiento, robo u otras causas distintas a una venta.
+
+### Ajuste
+
+Corrección autorizada del inventario mediante un movimiento registrado.
 
 ---
 
-## Merma
+## Compras
 
-Pérdida de inventario por causas distintas a una venta.
+### Compra
 
-Ejemplos:
+Operación mediante la cual ingresan productos al inventario.
 
-- Producto vencido
-- Producto roto
-- Robo
-
----
-
-## Compra
-
-Registro mediante el cual ingresan productos al inventario provenientes de un proveedor.
-
----
-
-## Proveedor
+### Proveedor
 
 Persona o empresa que suministra productos al negocio.
 
 ---
 
-## Venta
+## Ventas
 
-Operación mediante la cual uno o varios productos son entregados a un cliente a cambio de un pago.
+### Venta
 
----
+Operación mediante la cual se entregan productos a cambio de un pago.
 
-## Cliente
+**Genera**
+
+- Movimiento de Inventario.
+- Movimiento de Caja.
+- Auditoría cuando corresponda.
+
+**No debe**
+
+- Modificar existencias directamente.
+- Modificar saldos de caja directamente.
+
+### Cliente
 
 Persona o empresa que realiza una compra.
 
-En CajaFácil el cliente será opcional para ventas de contado.
+En ventas de contado podrá utilizarse el cliente genérico **Consumidor Final**.
 
-Será obligatorio únicamente cuando la venta lo requiera.
-
----
-
-## Cliente de contado
-
-Cliente genérico utilizado automáticamente cuando una venta no requiere identificar al comprador.
-
-Nombre sugerido:
-
-Consumidor Final.
-
----
-
-## Crédito
+### Crédito
 
 Venta cuyo pago queda pendiente total o parcialmente.
 
----
+### Abono
 
-## Abono
+Pago aplicado para disminuir el saldo pendiente de un crédito.
 
-Pago realizado por un cliente para disminuir el saldo de un crédito.
+### Comprobante
 
----
+Documento emitido como resultado de una venta.
 
-## Caja
-
-Sesión de trabajo donde se registran las operaciones de efectivo de un cajero.
-
----
-
-## Apertura de caja
-
-Inicio oficial de una sesión de caja.
-
----
-
-## Cierre de caja
-
-Finalización oficial de una sesión de caja.
-
----
-
-## Arqueo
-
-Proceso de comparación entre el dinero esperado y el dinero contado físicamente.
-
----
-
-## Comprobante
-
-Documento generado por una venta.
-
-Dependiendo de la configuración podrá representar:
+Puede representarse como:
 
 - Ticket
 - Factura
 - Recibo
 
-La palabra oficial será **Comprobante**.
+El término oficial del negocio será **Comprobante**.
 
 ---
 
-## Reporte
+## Caja
 
-Documento que presenta información resumida del negocio.
+### Caja
+
+Sesión de trabajo donde se registran operaciones monetarias.
+
+### Apertura de Caja
+
+Inicio oficial de una sesión de caja.
+
+### Cierre de Caja
+
+Finalización oficial de una sesión de caja.
+
+### Movimiento de Caja
+
+Registro histórico que incrementa o disminuye el dinero administrado por una caja.
+
+### Arqueo
+
+Comparación entre el dinero esperado y el dinero contado físicamente.
+
+---
+
+## Reportes
+
+### Reporte
+
+Documento que resume información del negocio.
 
 ---
 
 ## Auditoría
 
-Registro histórico de acciones importantes realizadas dentro del sistema.
+### Auditoría
+
+Registro histórico e inmutable de acciones relevantes.
+
+Nunca debe eliminarse.
 
 ---
 
-## Respaldo
+## Respaldo y Sincronización
 
-Copia de seguridad de la información del negocio.
+### Respaldo
 
----
+Copia de seguridad de la información.
 
-## Sincronización
+### Sincronización
 
-Proceso mediante el cual la información local se actualiza con la nube.
-
----
-
-## Estado Activo
-
-Elemento disponible para utilizarse normalmente.
+Proceso que intercambia información entre SQLite y PostgreSQL.
 
 ---
 
-## Estado Inactivo
+## Estados
 
-Elemento conservado por historial pero no disponible para nuevas operaciones.
+### Activo
 
----
+Elemento disponible para operar.
 
-# Convenciones de nombres
+### Inactivo
 
-## Interfaz
-
-La interfaz deberá utilizar palabras fáciles de entender.
-
-Ejemplos:
-
-Correcto:
-
-- Producto
-- Compra
-- Venta
-- Caja
-
-Evitar:
-
-- Artículo Comercial
-- Movimiento Contable
-- Documento Comercial
+Elemento conservado por historial, pero no disponible para nuevas operaciones.
 
 ---
 
-## Código
+# Sinónimos prohibidos
 
-Las clases utilizarán PascalCase.
-
-Ejemplos:
-
-Producto
-
-Venta
-
-Compra
-
-MovimientoInventario
-
-Caja
+| Término oficial | Evitar |
+|-----------------|---------|
+| Producto | Artículo, Ítem, Mercancía |
+| Venta | Transacción comercial |
+| Compra | Adquisición |
+| Comprobante | Ticket, Factura (como término genérico) |
+| Movimiento de Inventario | Cambio de stock |
+| Movimiento de Caja | Cambio de saldo |
 
 ---
 
-## Variables
+# Relación entre conceptos
 
-Las variables utilizarán camelCase.
-
-Ejemplos:
-
-precioVenta
-
-stockActual
-
-fechaCompra
-
-codigoBarras
-
----
-
-## Base de datos
-
-Las tablas utilizarán nombres en singular.
-
-Ejemplos:
-
-producto
-
-venta
-
-compra
-
-cliente
-
-usuario
+- Una Empresa posee Usuarios.
+- Una Empresa posee Productos.
+- Un Producto pertenece a una Categoría, Marca y Unidad.
+- Una Compra genera Movimientos de Inventario.
+- Una Venta genera Movimientos de Inventario.
+- Una Venta genera Movimientos de Caja.
+- Un Crédito puede recibir Abonos.
+- Una Caja registra Movimientos de Caja.
+- La Auditoría registra operaciones críticas.
 
 ---
 
 # Observaciones
 
-Este documento podrá ampliarse conforme aparezcan nuevos conceptos en CajaFácil.
+Este documento es la referencia oficial del lenguaje utilizado en CajaFácil.
 
-Sin embargo, ningún término oficial deberá modificarse sin evaluar previamente su impacto en la documentación, el código y la base de datos.
+Toda documentación, código, base de datos y generación automática con Antigravity deberá utilizar estos términos de forma consistente.

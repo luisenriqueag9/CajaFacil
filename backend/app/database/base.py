@@ -15,4 +15,5 @@ from app.modules.product.data.models import Product  # noqa: F401
 from app.modules.unit.data.models import Unit  # noqa: F401
 from app.modules.category.data.models import Category  # noqa: F401
 from app.modules.company.data.models import Company  # noqa: F401
+from app.modules.brand.data.models import Brand  # noqa: F401
 

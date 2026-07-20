@@ -1,383 +1,334 @@
 # 02_ARQUITECTURA_GENERAL.md
 
-Versión: 1.0
-Estado: Aprobado
-Última actualización: 2026-07-18
-Documento: Arquitectura General
+**Versión:** 2.0  
+**Estado:** Aprobado (Revisión Arquitectónica)  
+**Última actualización:** 2026-07-19  
+**Documento:** Arquitectura General
 
 # Arquitectura General de CajaFácil
 
 ## Objetivo
 
-Definir la arquitectura técnica que gobernará el desarrollo de CajaFácil, estableciendo la organización del sistema, las responsabilidades de cada componente y las reglas que deberán respetarse durante todo el ciclo de vida del proyecto.
-
-Este documento será la referencia principal para cualquier decisión de arquitectura.
+Definir la arquitectura técnica oficial que gobernará el desarrollo de CajaFácil durante todo su ciclo de vida. Este documento es el contrato arquitectónico del proyecto y prevalece sobre cualquier decisión de implementación.
 
 ---
 
-# Principios de Arquitectura
+# Principios Arquitectónicos
 
-Toda decisión técnica deberá respetar los siguientes principios:
-
-- Modularidad.
+- El negocio gobierna la tecnología.
+- Arquitectura antes que implementación.
+- Offline First.
+- Multiempresa desde el diseño.
 - Bajo acoplamiento.
 - Alta cohesión.
+- Separación estricta de responsabilidades.
 - Escalabilidad.
 - Mantenibilidad.
-- Rendimiento.
-- Seguridad.
-- Simplicidad para el usuario.
-- Código reutilizable.
-- Separación de responsabilidades.
+- Trazabilidad completa.
+- No generar deuda técnica deliberadamente.
 
 ---
 
-# Arquitectura General
+# Arquitectura por Capas
 
-CajaFácil estará dividido en módulos independientes.
-
-Cada módulo será responsable únicamente de su propio dominio del negocio.
-
-Los módulos no deberán contener lógica perteneciente a otros módulos.
-
----
-
-# Estructura General
-
-La aplicación estará organizada de la siguiente manera:
-
+```text
+Presentation
+      │
+      ▼
+Application
+      │
+      ▼
+Domain
+      ▲
+      │
+Infrastructure (Data)
 ```
+
+## Presentation
+
+Responsable únicamente de:
+
+- UI
+- Navegación
+- Estado de pantalla
+- Widgets
+- Validaciones de presentación
+
+Nunca contiene reglas del negocio.
+
+---
+
+## Application
+
+Coordina los casos de uso.
+
+Incluye:
+
+- Use Cases
+- DTO
+- Commands
+- Queries
+- Coordinación de transacciones
+
+No contiene acceso directo a la base de datos.
+
+---
+
+## Domain
+
+Es el corazón del sistema.
+
+Contiene:
+
+- Entidades
+- Value Objects
+- Servicios de dominio
+- Interfaces de repositorios
+- Reglas del negocio
+- Excepciones del dominio
+
+El dominio nunca depende de Infrastructure.
+
+---
+
+## Infrastructure (Data)
+
+Implementa:
+
+- SQLite
+- PostgreSQL
+- API
+- Repositorios
+- Datasources
+- Mappers
+- Persistencia
+
+Nunca contiene reglas del negocio.
+
+---
+
+# Organización del Proyecto
+
+```text
 desktop_app/
 │
+├── docs/
 ├── lib/
 │   ├── app/
 │   │   ├── core/
-│   │   ├── modules/
-│   │   └── shared/
-│   │
+│   │   ├── shared/
+│   │   └── modules/
 │   └── main.dart
-│
-├── docs/
-│
-└── ...
 ```
 
 ---
 
-# Core
+# Organización de un Módulo
 
-El directorio **core** contendrá los componentes globales del sistema.
-
-Ejemplos:
-
-- Configuración.
-- Tema.
-- Colores.
-- Navegación.
-- Base de datos.
-- Servicios globales.
-- Seguridad.
-- Sincronización.
-- Constantes.
-- Utilidades generales.
-
-El código ubicado en Core podrá ser utilizado por cualquier módulo.
-
----
-
-# Shared
-
-Shared contendrá componentes reutilizables.
-
-Ejemplos:
-
-- Botones.
-- TextFields.
-- Diálogos.
-- Tablas.
-- Widgets reutilizables.
-- Validadores comunes.
-- Helpers.
-
-Shared nunca contendrá reglas del negocio.
-
----
-
-# Modules
-
-Cada módulo representará un dominio del negocio.
-
-Ejemplos:
-
-- Productos.
-- Compras.
-- Inventario.
-- Ventas.
-- Caja.
-- Clientes.
-- Crédito.
-- Reportes.
-
-Cada módulo deberá ser independiente.
-
----
-
-# Arquitectura interna de un módulo
-
-Todos los módulos seguirán exactamente la misma estructura.
-
-```
-module/
+```text
+productos/
 │
-├── data/
+├── application/
+│   ├── dto/
+│   ├── usecases/
+│   ├── commands/
+│   └── queries/
 │
 ├── domain/
+│   ├── entities/
+│   ├── value_objects/
+│   ├── repositories/
+│   ├── services/
+│   └── exceptions/
+│
+├── infrastructure/
+│   ├── datasources/
+│   ├── models/
+│   ├── mappers/
+│   └── repositories/
 │
 └── presentation/
     ├── controllers/
+    ├── providers/
     ├── pages/
     └── widgets/
 ```
 
 ---
 
-# Data
+# Reglas de Dependencia
 
-Responsabilidades:
-
-- SQLite.
-- PostgreSQL.
-- API.
-- Repositorios.
-- Modelos.
-- Mappers.
-- Persistencia.
-
-Data nunca contendrá reglas del negocio.
+- Presentation depende únicamente de Application.
+- Application depende únicamente de Domain.
+- Infrastructure implementa interfaces definidas por Domain.
+- Domain no conoce Flutter, SQLite, PostgreSQL ni FastAPI.
 
 ---
 
-# Domain
+# Dependency Injection
 
-Es el corazón del sistema.
+Todas las dependencias deberán resolverse mediante un contenedor de inyección.
 
-Aquí vivirán:
-
-- Entidades.
-- Casos de uso.
-- Interfaces.
-- Reglas del negocio.
-- Validaciones del dominio.
-
-Todo el comportamiento del negocio deberá implementarse aquí.
+Ningún módulo podrá instanciar manualmente repositorios concretos.
 
 ---
 
-# Presentation
+# Comunicación entre Módulos
 
-Responsable de la interfaz gráfica.
+Los módulos no acceden a datos internos de otros módulos.
 
-Incluye:
+La comunicación se realiza mediante:
 
-- Pantallas.
-- Widgets.
-- Controladores.
-- Estados.
-- Navegación del módulo.
-
-Presentation nunca accederá directamente a la base de datos.
+- Casos de uso
+- Interfaces públicas
+- Eventos de dominio cuando corresponda
 
 ---
 
-# Comunicación entre capas
+# Eventos del Dominio
 
-La comunicación será únicamente en un sentido.
+Eventos típicos:
 
-```
-Presentation
-      ↓
-Domain
-      ↓
-Data
-```
+- VentaConfirmada
+- CompraRegistrada
+- CajaAbierta
+- CajaCerrada
+- ProductoActualizado
 
-Nunca deberá ocurrir lo contrario.
+Permiten desacoplar Inventario, Caja, Auditoría y Sincronización.
 
 ---
 
-# Comunicación entre módulos
+# Transacciones
 
-Un módulo no podrá modificar directamente la información interna de otro módulo.
+Operaciones críticas deberán ser atómicas.
 
-Toda comunicación deberá realizarse mediante servicios, casos de uso o interfaces públicas.
+Ejemplo:
 
----
+Registrar venta:
 
-# Base de datos
+- Venta
+- Movimiento de inventario
+- Movimiento de caja
+- Auditoría
 
-CajaFácil utilizará dos bases de datos.
-
-## Local
-
-SQLite.
-
-Responsable de:
-
-- Operación diaria.
-- Funcionamiento sin Internet.
-- Alto rendimiento.
+Si cualquiera falla, toda la operación se revierte.
 
 ---
 
-## Nube
+# Offline First
 
-PostgreSQL.
+SQLite es la base operativa.
 
-Responsable de:
-
-- Respaldo.
-- Sincronización.
-- Multiempresa.
-- Administración remota.
+La aplicación nunca dependerá de Internet para vender.
 
 ---
 
-# Funcionamiento Offline
+# Sincronización
 
-La aplicación deberá funcionar completamente utilizando SQLite.
+La sincronización será independiente de la operación.
 
-La sincronización con PostgreSQL será un proceso independiente.
+Principios:
 
-Una falla de Internet nunca deberá impedir registrar una venta.
+- Cola de sincronización
+- Reintentos automáticos
+- Idempotencia
+- Resolución de conflictos
+- Identificadores globales
+- Marcas de tiempo
 
 ---
 
 # Seguridad
 
-Toda operación deberá respetar permisos.
+Los permisos se validan tanto en UI como en Application y Domain.
 
-No bastará con ocultar botones.
-
-Las validaciones deberán realizarse también en la lógica del negocio.
+Ocultar botones nunca constituye seguridad.
 
 ---
 
 # Auditoría
 
-Las operaciones críticas deberán generar registros de auditoría.
+Las operaciones críticas generan registros inmutables.
 
-Ejemplos:
-
-- Cambios de precio.
-- Ajustes.
-- Eliminaciones lógicas.
-- Aperturas de caja.
-- Cierres.
-- Anulaciones.
+Nunca se elimina historial.
 
 ---
 
 # Rendimiento
 
-El rendimiento tendrá prioridad sobre efectos visuales innecesarios.
+Prioridades:
 
-Toda operación frecuente deberá optimizarse.
+- Ventas
+- Búsquedas
+- Inventario
+- Apertura de pantallas
 
-Especialmente:
-
-- Búsquedas.
-- Ventas.
-- Inventario.
-- Apertura de pantallas.
+La experiencia del cajero tiene prioridad sobre efectos visuales.
 
 ---
 
-# Escalabilidad
+# Convenciones
 
-La arquitectura deberá permitir incorporar nuevos módulos sin modificar los existentes.
+Ejemplos:
 
-Ejemplos futuros:
-
-- Restaurante.
-- Facturación electrónica.
-- Comercio electrónico.
-- Programa de puntos.
-- Aplicación móvil.
-
----
-
-# Reglas Arquitectónicas
-
-Siempre:
-
-- Un módulo = una responsabilidad.
-- Una pantalla = una responsabilidad.
-- Una clase = una responsabilidad.
-
-Nunca:
-
-- Lógica del negocio en la interfaz.
-- Consultas SQL desde la UI.
-- Widgets con reglas de negocio.
-- Código duplicado.
-- Dependencias circulares.
+- Producto
+- ProductoRepository
+- ProductoRepositoryImpl
+- CrearProductoUseCase
+- ProductoDTO
+- ProductoMapper
+- ProductoPage
+- ProductoController
 
 ---
 
-# Decisiones Arquitectónicas
+# Registro de Decisiones Arquitectónicas (ADR)
 
-## A-001
+Cada decisión incluirá:
 
-CajaFácil utilizará una arquitectura modular organizada por dominios.
-
-Estado:
-
-Aprobada.
-
----
-
-## A-002
-
-La lógica del negocio vivirá exclusivamente en Domain.
-
-Estado:
-
-Aprobada.
+- ID
+- Fecha
+- Contexto
+- Decisión
+- Consecuencias
+- Estado
+- Impacto
+- Documentos relacionados
 
 ---
 
-## A-003
+# Decisiones Vigentes
 
-SQLite será la base principal de operación.
-
-Estado:
-
-Aprobada.
-
----
-
-## A-004
-
-PostgreSQL será utilizado para sincronización y servicios en la nube.
-
-Estado:
-
-Aprobada.
+- A-001 Arquitectura Modular.
+- A-002 Lógica del negocio en Domain.
+- A-003 SQLite como base operativa.
+- A-004 PostgreSQL para sincronización y nube.
+- A-005 Offline First.
+- A-006 Introducción de Application como capa de coordinación.
+- A-007 Dependency Injection obligatoria.
+- A-008 Comunicación mediante interfaces y eventos.
+- A-009 Transacciones atómicas.
+- A-010 ADR obligatorio para cambios arquitectónicos.
 
 ---
 
-## A-005
+# Reglas para Antigravity
 
-El sistema deberá funcionar sin Internet.
+Toda generación automática de código deberá respetar:
 
-Estado:
-
-Aprobada.
+- La estructura oficial de carpetas.
+- Las convenciones de nombres.
+- La separación por capas.
+- Las dependencias permitidas.
+- La prohibición de lógica de negocio fuera de Domain.
+- La reutilización de componentes Shared.
+- La independencia entre módulos.
 
 ---
 
-# Observaciones
+# Observaciones Finales
 
-Toda nueva funcionalidad deberá respetar esta arquitectura.
+Ninguna funcionalidad podrá incorporarse rompiendo estas reglas sin aprobar previamente una nueva Decisión Arquitectónica (ADR).
 
-Si una funcionalidad requiere romper alguna de estas reglas, primero deberá modificarse este documento y aprobarse la nueva decisión arquitectónica.
+Este documento constituye la referencia técnica principal para la evolución de CajaFácil.
