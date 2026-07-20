@@ -1,7 +1,8 @@
-from typing import Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 from pydantic import BaseModel
 
 T = TypeVar("T")
+
 
 class BaseAPIResponse(BaseModel):
     """
@@ -10,11 +11,13 @@ class BaseAPIResponse(BaseModel):
     success: bool = True
     message: Optional[str] = "Success"
 
+
 class APIResponse(BaseAPIResponse, Generic[T]):
     """
     Wrapper for API responses returning a data payload of type T.
     """
     data: Optional[T] = None
+
 
 class APIErrorResponse(BaseModel):
     """
@@ -23,4 +26,4 @@ class APIErrorResponse(BaseModel):
     success: bool = False
     error_code: str
     message: str
-    details: Optional[any] = None
+    details: Optional[Any] = None

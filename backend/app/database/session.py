@@ -14,6 +14,10 @@ if settings.DB_PROVIDER == "sqlite":
 else:
     logger.info("Initializing PostgreSQL database engine.")
 
+print("======================================")
+print("DATABASE_URL:", settings.DATABASE_URL)
+print("======================================")
+
 # Create the Engine
 engine = create_engine(
     settings.DATABASE_URL,
@@ -48,6 +52,7 @@ def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
+        db.commit() 
     except Exception as e:
         logger.error(f"Database session error: {str(e)}")
         db.rollback()

@@ -1,5 +1,6 @@
 from uuid import UUID
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from app.database.repositories import BaseRepository
 from app.modules.company.domain.entities.company import Company as DomainCompany
 from app.modules.company.domain.repositories.company_repository import CompanyRepository
@@ -15,6 +16,20 @@ class CompanyRepositoryImpl(BaseRepository[DBCompany], CompanyRepository):
         db_company = company_mapper.to_db(company)
         db_company = super().create(db_company)
         self.db.refresh(db_company)
+        return company_mapper.to_domain(db_company)
+    
+    def get_by_tax_id(self, tax_id: str) -> DomainCompany | None:
+        """
+        Retrieve a company by its tax identifier (RTN).
+        Returns None if no company exists.
+        """
+        statement = select(DBCompany).where(DBCompany.tax_id == tax_id)
+
+        db_company = self.db.execute(statement).scalar_one_or_none()
+
+        if db_company is None:
+            return None
+
         return company_mapper.to_domain(db_company)
 
     def get_by_id(self, company_id: UUID) -> DomainCompany | None:

@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.core.logger import logger
 from app.common.exceptions import CajaFacilException
 from app.common.responses import APIErrorResponse, BaseAPIResponse
+from app.modules.company.presentation.routers.company_router import router as company_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,6 +77,11 @@ async def health_check():
         message="CajaFácil Core API is healthy and operational."
     )
 
+app.include_router(
+    company_router,
+    prefix="/api/v1/companies",
+    tags=["Companies"],
+)
 # Note: Register modular routers here
 # Example:
 # from app.modules.product.presentation.routes import router as product_router

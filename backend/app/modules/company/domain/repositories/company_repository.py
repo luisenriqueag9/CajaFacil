@@ -8,6 +8,14 @@ class CompanyRepository(ABC):
     def create(self, company: Company) -> Company:
         """Persist a new company in the storage and return it."""
         pass
+
+    @abstractmethod
+    def get_by_tax_id(self, tax_id: str) -> Company | None:
+        """
+        Retrieve a company by its tax identifier (RTN).
+        Returns None if no company exists.
+        """
+        pass
         
     @abstractmethod
     def get_by_id(self, company_id: UUID) -> Company | None:
