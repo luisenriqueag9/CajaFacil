@@ -1,8 +1,18 @@
 from uuid import UUID
 
-class CompanyNotFoundException(Exception):
-    """Exception raised when a requested company is not found in the domain."""
+from app.common.exceptions import NotFoundException
+
+
+class CompanyNotFoundException(NotFoundException):
+    """
+    Exception raised when the requested company does not exist.
+    """
+
     def __init__(self, company_id: UUID):
-        self.company_id = company_id
-        self.message = f"Company with id {company_id} not found"
-        super().__init__(self.message)
+        super().__init__(
+            message=f"Company with id '{company_id}' was not found.",
+            code="COMPANY_NOT_FOUND",
+            details={
+                "company_id": str(company_id)
+            }
+        )

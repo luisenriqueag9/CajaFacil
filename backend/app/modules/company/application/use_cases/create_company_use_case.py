@@ -17,18 +17,9 @@ class CreateCompanyUseCase:
         Creates a company after validating business rules.
         """
 
-        # Business Rule:
-        # A company with the same RTN (tax_id) cannot exist.
         existing_company = self.repository.get_by_tax_id(company.tax_id)
-        print("===================================")
-        print("TAX_ID:", company.tax_id)
-        print("EXISTING COMPANY:", existing_company)
-        print("===================================")
-        # =========================
 
         if existing_company is not None:
-            raise CompanyAlreadyExistsException(
-                f"A company with tax_id '{company.tax_id}' already exists."
-            )
+            raise CompanyAlreadyExistsException(company.tax_id)
 
         return self.repository.create(company)
