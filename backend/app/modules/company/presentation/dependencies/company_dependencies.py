@@ -7,6 +7,9 @@ from app.modules.company.application.use_cases.create_company_use_case import Cr
 from app.modules.company.application.use_cases.get_company_by_id_use_case import (
     GetCompanyByIdUseCase,
 )
+from app.modules.company.application.use_cases.get_all_companies_use_case import (
+    GetAllCompaniesUseCase,
+)
 
 def get_company_repository(db: Session = Depends(get_db)) -> CompanyRepository:
     """FastAPI dependency to retrieve the concrete implementation of CompanyRepository."""
@@ -26,3 +29,12 @@ def get_company_by_id_use_case(
     initialized with its repository.
     """
     return GetCompanyByIdUseCase(repository)
+
+def get_all_companies_use_case(
+    repository: CompanyRepository = Depends(get_company_repository)
+) -> GetAllCompaniesUseCase:
+    """
+    FastAPI dependency to retrieve the GetAllCompaniesUseCase
+    initialized with its repository.
+    """
+    return GetAllCompaniesUseCase(repository)
