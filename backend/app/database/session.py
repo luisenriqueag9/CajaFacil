@@ -47,7 +47,10 @@ SessionLocal = sessionmaker(
 def get_db() -> Generator[Session, None, None]:
     """
     FastAPI dependency that provides a transactional database session.
-    Automatically closes the session after the request finishes or handles rollbacks.
+    Provides one transactional SQLAlchemy session per request.
+
+    The session is committed only if the request finishes successfully.
+    Otherwise, the transaction is rolled back automatically.
     """
     db = SessionLocal()
     try:
