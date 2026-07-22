@@ -50,10 +50,3 @@ class CompanyRepositoryImpl(BaseRepository[DBCompany], CompanyRepository):
         self.db.refresh(db_company)
         return company_mapper.to_domain(db_company)
 
-    def delete(self, company_id: UUID) -> bool:
-        db_company = super().get_by_id(company_id)
-        if db_company:
-            db_company.status = "INACTIVE"
-            self.db.flush()
-            return True
-        return False

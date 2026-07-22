@@ -31,8 +31,4 @@ class CompanyRepository(ABC):
     def update(self, company: Company) -> Company:
         """Update an existing company in the storage and return it."""
         pass
-        
-    @abstractmethod
-    def delete(self, company_id: UUID) -> bool:
-        """Delete a company from the storage. Returns True if successful, False otherwise."""
-        pass
+

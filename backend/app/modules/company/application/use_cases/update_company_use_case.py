@@ -35,8 +35,15 @@ class UpdateCompanyUseCase:
             raise CompanyNotFoundException(company_id)
 
         # Actualizar únicamente los campos enviados
-        for field, value in updates.items():
-            setattr(company, field, value)
+        company.update_profile(
+            business_name=updates.get("business_name", company.business_name),
+            trade_name=updates.get("trade_name", company.trade_name),
+            email=updates.get("email", company.email),
+            phone=updates.get("phone", company.phone),
+            currency=updates.get("currency", company.currency),
+            timezone=updates.get("timezone", company.timezone),
+            status=updates.get("status", company.status),
+        )
 
         # Guardar cambios
         updated_company = self.repository.update(company)
