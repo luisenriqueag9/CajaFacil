@@ -53,11 +53,24 @@ class UpdateProductUseCase:
         # Perform uniqueness checks for code/barcode if modified
         self._validate_uniqueness_for_update(product, updates)
 
-        # Mutate the entity (structured assignment preparing for full DDD encapsulation)
-        self._apply_updates_to_entity(product, updates)
-
-        # Validate domain invariants after mutations
-        product.validate()
+        # Mutate the entity (structured assignment using update_profile)
+        product.update_profile(
+            internal_code=updates.get("internal_code", product.internal_code),
+            barcode=updates.get("barcode", product.barcode),
+            name=updates.get("name", product.name),
+            description=updates.get("description", product.description),
+            category_id=updates.get("category_id", product.category_id),
+            brand_id=updates.get("brand_id", product.brand_id),
+            unit_id=updates.get("unit_id", product.unit_id),
+            cost=updates.get("cost", product.cost),
+            price=updates.get("price", product.price),
+            tax_rate=updates.get("tax_rate", product.tax_rate),
+            controls_stock=updates.get("controls_stock", product.controls_stock),
+            allows_decimal=updates.get("allows_decimal", product.allows_decimal),
+            is_perishable=updates.get("is_perishable", product.is_perishable),
+            minimum_stock=updates.get("minimum_stock", product.minimum_stock),
+            status=updates.get("status", product.status),
+        )
 
         # Persist changes
         return self.repository.update(product)
@@ -76,40 +89,3 @@ class UpdateProductUseCase:
                 existing = self.repository.get_by_barcode(product.company_id, str(new_barcode))
                 if existing is not None and existing.id != product.id:
                     raise ProductAlreadyExistsException("barcode", str(new_barcode), product.company_id)
-
-    def _apply_updates_to_entity(self, product: Product, updates: dict[str, object]) -> None:
-        """
-        Structured setter mapping.
-        Replaces unrestricted setattr() and provides single hook to incorporate entity methods
-        (like change_price, rename, etc.) in subsequent refactors.
-        """
-        if "internal_code" in updates:
-            product.internal_code = str(updates["internal_code"])
-        if "barcode" in updates:
-            product.barcode = str(updates["barcode"]) if updates["barcode"] is not None else None
-        if "name" in updates:
-            product.name = str(updates["name"])
-        if "description" in updates:
-            product.description = str(updates["description"]) if updates["description"] is not None else None
-        if "category_id" in updates:
-            product.category_id = updates["category_id"]
-        if "brand_id" in updates:
-            product.brand_id = updates["brand_id"]
-        if "unit_id" in updates:
-            product.unit_id = updates["unit_id"]
-        if "cost" in updates:
-            product.cost = updates["cost"]
-        if "price" in updates:
-            product.price = updates["price"]
-        if "tax_rate" in updates:
-            product.tax_rate = updates["tax_rate"]
-        if "controls_stock" in updates:
-            product.controls_stock = bool(updates["controls_stock"])
-        if "allows_decimal" in updates:
-            product.allows_decimal = bool(updates["allows_decimal"])
-        if "is_perishable" in updates:
-            product.is_perishable = bool(updates["is_perishable"])
-        if "minimum_stock" in updates:
-            product.minimum_stock = updates["minimum_stock"]
-        if "status" in updates:
-            product.status = str(updates["status"])

@@ -100,14 +100,3 @@ class ProductRepositoryImpl(BaseRepository[DBProduct], ProductRepository):
         self.db.flush()
         self.db.refresh(db_product)
         return product_mapper.to_domain(db_product)
-
-    def deactivate(self, product_id: UUID) -> bool:
-        db_product = super().get_by_id(product_id)
-        if db_product:
-            # Change status using Mapper translation
-            db_product.status = product_mapper.to_db_status("INACTIVO")
-            # Force update of updated_at timestamp
-            db_product.updated_at = datetime.now(timezone.utc)
-            self.db.flush()
-            return True
-        return False

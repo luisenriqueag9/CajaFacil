@@ -29,6 +29,53 @@ class Product:
     def __post_init__(self) -> None:
         self.validate()
 
+    def update_profile(
+        self,
+        *,
+        internal_code: str,
+        barcode: str | None,
+        name: str,
+        description: str | None,
+        category_id: UUID,
+        brand_id: UUID,
+        unit_id: UUID,
+        cost: Decimal,
+        price: Decimal,
+        tax_rate: Decimal,
+        controls_stock: bool,
+        allows_decimal: bool,
+        is_perishable: bool,
+        minimum_stock: Decimal,
+        status: str,
+    ) -> None:
+        """
+        Updates the product's details with explicit and typed parameters,
+        and re-runs validations.
+        """
+        self.internal_code = internal_code
+        self.barcode = barcode
+        self.name = name
+        self.description = description
+        self.category_id = category_id
+        self.brand_id = brand_id
+        self.unit_id = unit_id
+        self.cost = cost
+        self.price = price
+        self.tax_rate = tax_rate
+        self.controls_stock = controls_stock
+        self.allows_decimal = allows_decimal
+        self.is_perishable = is_perishable
+        self.minimum_stock = minimum_stock
+        self.status = status
+        self.validate()
+
+    def deactivate(self) -> None:
+        """
+        Deactivates the product by setting its status to INACTIVO.
+        """
+        self.status = "INACTIVO"
+        self.validate()
+
     def validate(self) -> None:
         """
         Validates the product domain invariants.

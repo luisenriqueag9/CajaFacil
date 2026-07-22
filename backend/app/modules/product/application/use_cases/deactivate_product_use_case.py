@@ -15,4 +15,6 @@ class DeactivateProductUseCase:
         if product is None:
             raise ProductNotFoundException(product_id)
 
-        return self.repository.deactivate(product_id)
+        product.deactivate()
+        self.repository.update(product)
+        return True

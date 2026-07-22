@@ -59,11 +59,3 @@ class ProductRepository(ABC):
         Update an existing product in the storage and return it.
         """
         pass
-
-    @abstractmethod
-    def deactivate(self, product_id: UUID) -> bool:
-        """
-        Deactivate a product in storage (soft-delete).
-        Returns True if successful, False otherwise.
-        """
-        pass
