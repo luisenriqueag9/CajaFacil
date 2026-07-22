@@ -8,6 +8,7 @@ from app.core.logger import logger
 from app.common.exceptions import CajaFacilException
 from app.common.responses import APIErrorResponse, BaseAPIResponse
 from app.modules.company.presentation.routers.company_router import router as company_router
+from app.modules.brand.presentation.routers.brand_router import router as brand_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -81,6 +82,12 @@ app.include_router(
     company_router,
     prefix="/api/v1/companies",
     tags=["Companies"],
+)
+
+app.include_router(
+    brand_router,
+    prefix="/api/v1/brands",
+    tags=["Brands"],
 )
 # Note: Register modular routers here
 # Example:

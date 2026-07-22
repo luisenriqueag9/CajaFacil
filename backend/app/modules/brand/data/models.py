@@ -21,7 +21,6 @@ class Brand(Base):
     )
     
     # Identifiers and descriptions
-    code: Mapped[str] = mapped_column(String(50), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     
@@ -43,6 +42,5 @@ class Brand(Base):
 
     # Unique constraints within the company context
     __table_args__ = (
-        UniqueConstraint("company_id", "code", name="uq_brand_company_code"),
         UniqueConstraint("company_id", "name", name="uq_brand_company_name"),
     )
