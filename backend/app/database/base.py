@@ -17,4 +17,5 @@ from app.modules.category.data.models import Category  # noqa: F401
 from app.modules.company.data.models import Company  # noqa: F401
 from app.modules.brand.data.models import Brand  # noqa: F401
 from app.modules.supplier.data.models import Supplier  # noqa: F401
+from app.modules.purchase.data.models import Purchase, PurchaseDetail  # noqa: F401
 

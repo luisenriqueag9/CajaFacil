@@ -11,6 +11,7 @@ from app.modules.company.presentation.routers.company_router import router as co
 from app.modules.brand.presentation.routers.brand_router import router as brand_router
 from app.modules.category.presentation.routers.category_router import router as category_router
 from app.modules.supplier.presentation.routers.supplier_router import router as supplier_router
+from app.modules.purchase.presentation.routers.purchase_router import router as purchase_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -102,6 +103,12 @@ app.include_router(
     supplier_router,
     prefix="/api/v1/suppliers",
     tags=["Suppliers"],
+)
+
+app.include_router(
+    purchase_router,
+    prefix="/api/v1/purchases",
+    tags=["Purchases"],
 )
 # Note: Register modular routers here
 # Example:
