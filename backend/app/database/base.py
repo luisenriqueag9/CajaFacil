@@ -20,4 +20,5 @@ from app.modules.supplier.data.models import Supplier  # noqa: F401
 from app.modules.purchase.data.models import Purchase, PurchaseDetail  # noqa: F401
 from app.modules.venta.data.models import Venta, VentaDetail, VentaPayment, DBMovimientoInventario, DBMovimientoCaja, DBCredito  # noqa: F401
 from app.modules.inventario.data.models import MovimientoInventario as RealMovimiento, Merma as RealMerma, AjusteInventario as RealAjuste  # noqa: F401
+from app.modules.caja.data.models import Caja as RealCaja, MovimientoCaja as RealMovimientoCaja, ArqueoCaja as RealArqueoCaja  # noqa: F401
 
