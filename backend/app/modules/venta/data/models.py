@@ -115,7 +115,7 @@ class VentaPayment(Base):
 # ==========================================
 
 class DBMovimientoInventario(Base):
-    __tablename__ = "movimiento_inventario"
+    __tablename__ = "mock_movimiento_inventario"
 
     id: Mapped[UUID] = mapped_column(SqlUUID, primary_key=True, default=uuid4)
     company_id: Mapped[UUID] = mapped_column(SqlUUID, nullable=False, index=True)
@@ -137,7 +137,7 @@ class DBMovimientoInventario(Base):
 
 
 class DBMovimientoCaja(Base):
-    __tablename__ = "movimiento_caja"
+    __tablename__ = "mock_movimiento_caja"
 
     id: Mapped[UUID] = mapped_column(SqlUUID, primary_key=True, default=uuid4)
     company_id: Mapped[UUID] = mapped_column(SqlUUID, nullable=False, index=True)
@@ -155,7 +155,7 @@ class DBMovimientoCaja(Base):
 
 
 class DBCredito(Base):
-    __tablename__ = "credito"
+    __tablename__ = "mock_credito"
 
     id: Mapped[UUID] = mapped_column(SqlUUID, primary_key=True, default=uuid4)
     company_id: Mapped[UUID] = mapped_column(SqlUUID, nullable=False, index=True)

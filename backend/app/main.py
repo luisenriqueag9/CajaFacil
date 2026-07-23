@@ -13,6 +13,7 @@ from app.modules.category.presentation.routers.category_router import router as 
 from app.modules.supplier.presentation.routers.supplier_router import router as supplier_router
 from app.modules.purchase.presentation.routers.purchase_router import router as purchase_router
 from app.modules.venta.presentation.routers.venta_router import router as venta_router
+from app.modules.inventario.presentation.routers.inventario_router import router as inventario_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -116,6 +117,12 @@ app.include_router(
     venta_router,
     prefix="/api/v1/sales",
     tags=["Sales"],
+)
+
+app.include_router(
+    inventario_router,
+    prefix="/api/v1/inventory",
+    tags=["Inventory"],
 )
 # Note: Register modular routers here
 # Example:
