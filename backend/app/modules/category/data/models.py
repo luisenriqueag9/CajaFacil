@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID, uuid4
-from sqlalchemy import String, Text, DateTime, UniqueConstraint, UUID as SqlUUID, ForeignKey
+from sqlalchemy import String, DateTime, UniqueConstraint, UUID as SqlUUID, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -20,20 +20,12 @@ class Category(Base):
         index=True
     )
     
-    # Identifiers and descriptions
-    code: Mapped[str] = mapped_column(String(50), nullable=False)
+    # Identifiers
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    
-    # Hierarchical link (stored as UUID with physical foreign keys for consistency)
-    parent_id: Mapped[UUID | None] = mapped_column(
-        SqlUUID, 
-        ForeignKey("category.id", ondelete="RESTRICT"), 
-        nullable=True
-    )
     
     # Flags and administrative configuration
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="ACTIVE")
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="ACTIVO")
+    protected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -50,6 +42,5 @@ class Category(Base):
 
     # Unique constraints within the company context
     __table_args__ = (
-        UniqueConstraint("company_id", "code", name="uq_category_company_code"),
         UniqueConstraint("company_id", "name", name="uq_category_company_name"),
     )

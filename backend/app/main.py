@@ -9,6 +9,7 @@ from app.common.exceptions import CajaFacilException
 from app.common.responses import APIErrorResponse, BaseAPIResponse
 from app.modules.company.presentation.routers.company_router import router as company_router
 from app.modules.brand.presentation.routers.brand_router import router as brand_router
+from app.modules.category.presentation.routers.category_router import router as category_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -88,6 +89,12 @@ app.include_router(
     brand_router,
     prefix="/api/v1/brands",
     tags=["Brands"],
+)
+
+app.include_router(
+    category_router,
+    prefix="/api/v1/categories",
+    tags=["Categories"],
 )
 # Note: Register modular routers here
 # Example:
