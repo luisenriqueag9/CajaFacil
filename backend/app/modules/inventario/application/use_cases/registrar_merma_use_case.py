@@ -6,37 +6,38 @@ from sqlalchemy.orm import Session
 
 from app.common.exceptions import ValidationException
 from app.modules.inventario.domain.entities.movimiento import MovimientoInventario, Merma
+from app.modules.inventario.domain.entities.existencia import ExistenciaProducto
 from app.modules.inventario.domain.repositories.movimiento_repository import MovimientoInventarioRepository
-from app.modules.inventario.domain.exceptions import (
-    StockInsuficienteException,
-    ProductoNoManejaInventarioException
-)
+from app.modules.inventario.domain.repositories.existencia_repository import ExistenciaRepository
+from app.modules.inventario.domain.exceptions import ProductoNoManejaInventarioException
 from app.modules.inventario.domain.events.inventario_events import InventarioActualizado, MermaRegistrada
 from app.modules.inventario.application.ports.product_lookup import ProductLookup
 from app.modules.inventario.application.event_dispatcher import EventDispatcher
 
 @dataclass(frozen=True)
 class RegistrarMermaCommand:
-    company_id: UUID
-    product_id: UUID
+    company_id: uuid.UUID
+    product_id: uuid.UUID
     quantity: Decimal
     reason: str  # ROTURA, VENCIMIENTO, ROBO, OTRO
-    created_by: UUID
+    created_by: uuid.UUID
     description: str | None = None
 
 class RegistrarMermaUseCase:
     """
     Application Use Case to record inventory waste/mermas.
-    Reduces physical stock and stores justification.
+    Reduces fast stock balance (ExistenciaProducto) and stores detailed movement and justification.
     """
     def __init__(
         self,
         repository: MovimientoInventarioRepository,
+        existencia_repository: ExistenciaRepository,
         db: Session,
         event_dispatcher: EventDispatcher,
         product_lookup: ProductLookup
     ):
         self.repository = repository
+        self.existencia_repository = existencia_repository
         self.db = db
         self.event_dispatcher = event_dispatcher
         self.product_lookup = product_lookup
@@ -51,19 +52,18 @@ class RegistrarMermaUseCase:
         if not product_details.controls_stock:
             raise ProductoNoManejaInventarioException(command.product_id)
 
-        # 2. Derive stock balance
-        movements = self.repository.get_by_product_id(command.company_id, command.product_id)
-        current_stock = Decimal("0.0000")
-        for m in movements:
-            if m.type == "ENTRADA":
-                current_stock += m.quantity
-            elif m.type == "SALIDA":
-                current_stock -= m.quantity
+        # 2. Retrieve ExistenciaProducto
+        existencia = self.existencia_repository.get_by_product_id(command.company_id, command.product_id)
+        if existencia is None:
+            existencia = ExistenciaProducto(
+                id=uuid.uuid4(),
+                company_id=command.company_id,
+                product_id=command.product_id,
+                stock=Decimal("0.0000")
+            )
 
-        # 3. Check for stock shortage
-        if not product_details.allows_negative:
-            if current_stock - command.quantity < Decimal("0.0000"):
-                raise StockInsuficienteException(command.product_id, float(current_stock), float(command.quantity))
+        # 3. Apply stock decrement (mermas always reduce stock)
+        existencia.decrementar(command.quantity, allows_negative=product_details.allows_negative)
 
         # 4. Construct domain entities
         now = datetime.now(timezone.utc)
@@ -94,15 +94,14 @@ class RegistrarMermaUseCase:
         try:
             with self.db.begin_nested():
                 saved_mov = self.repository.save(movimiento)
+                self.existencia_repository.save(existencia)
                 
-                # Dispatch events sychronously
-                new_balance = current_stock - command.quantity
-                
+                # Dispatch events synchronously
                 ev_update = InventarioActualizado(
                     product_id=saved_mov.product_id,
                     company_id=saved_mov.company_id,
                     quantity_change=-command.quantity,
-                    new_balance=new_balance,
+                    new_balance=existencia.stock,
                     type="SALIDA",
                     concept="MERMA",
                     occurred_at=saved_mov.created_at

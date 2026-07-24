@@ -89,3 +89,28 @@ class AjusteInventario(Base):
 
     # Relationships
     movimiento: Mapped["MovimientoInventario"] = relationship("MovimientoInventario", back_populates="ajuste")
+
+
+from sqlalchemy import UniqueConstraint
+
+class ExistenciaProducto(Base):
+    __tablename__ = "existencia_producto"
+    __table_args__ = (
+        UniqueConstraint("company_id", "product_id", name="uq_company_product_stock"),
+    )
+
+    id: Mapped[UUID] = mapped_column(SqlUUID, primary_key=True, default=uuid4)
+    company_id: Mapped[UUID] = mapped_column(
+        SqlUUID, 
+        ForeignKey("company.id", ondelete="RESTRICT"), 
+        nullable=False, 
+        index=True
+    )
+    product_id: Mapped[UUID] = mapped_column(
+        SqlUUID, 
+        ForeignKey("product.id", ondelete="RESTRICT"), 
+        nullable=False, 
+        index=True
+    )
+    stock: Mapped[Decimal] = mapped_column(Numeric(18, 4), nullable=False, default=Decimal("0.0000"))
+

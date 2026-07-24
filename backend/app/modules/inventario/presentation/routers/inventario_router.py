@@ -11,14 +11,16 @@ from app.modules.inventario.application.use_cases import (
     RegistrarAjusteUseCase,
     RegistrarAjusteCommand,
     ObtenerStockProductoUseCase,
-    ListarMovimientosUseCase
+    ListarMovimientosUseCase,
+    RecalcularExistenciaDesdeKardexUseCase
 )
 from app.modules.inventario.presentation.dependencies.inventario_dependencies import (
     get_registrar_movimiento_use_case,
     get_registrar_merma_use_case,
     get_registrar_ajuste_use_case,
     get_obtener_stock_producto_use_case,
-    get_listar_movimientos_use_case
+    get_listar_movimientos_use_case,
+    get_recalcular_existencia_use_case
 )
 from app.modules.inventario.presentation.dto import (
     RegistrarMovimientoRequest,
@@ -150,6 +152,29 @@ def obtener_stock(
     )
 
 
+@router.post(
+    "/productos/{product_id}/recalcular",
+    response_model=ApiResponse[StockResponse],
+    status_code=status.HTTP_200_OK,
+)
+def recalcular_stock(
+    product_id: UUID,
+    company_id: UUID = Query(..., description="Company Tenant UUID"),
+    use_case: RecalcularExistenciaDesdeKardexUseCase = Depends(get_recalcular_existencia_use_case)
+) -> ApiResponse[StockResponse]:
+    """
+    Reconstruye el saldo de existencias a partir del historial del Kardex (Uso Administrativo Excepcional).
+    """
+    existencia_ent = use_case.execute(company_id=company_id, product_id=product_id)
+    response_dto = StockResponse(product_id=product_id, stock=existencia_ent.stock)
+
+    return ApiResponse(
+        success=True,
+        message="Existencias del producto recalculadas correctamente a partir del Kardex.",
+        data=response_dto
+    )
+
+
 @router.get(
     "/movimientos",
     response_model=ApiResponse[list[MovimientoInventarioResponse]],
@@ -185,3 +210,4 @@ def listar_movimientos(
         message="Historial de movimientos obtenido correctamente.",
         data=response_dtos
     )
+

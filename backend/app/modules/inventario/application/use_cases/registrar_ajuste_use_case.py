@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.common.exceptions import ValidationException
 from app.modules.inventario.domain.entities.movimiento import MovimientoInventario, AjusteInventario
+from app.modules.inventario.domain.entities.existencia import ExistenciaProducto
 from app.modules.inventario.domain.repositories.movimiento_repository import MovimientoInventarioRepository
+from app.modules.inventario.domain.repositories.existencia_repository import ExistenciaRepository
 from app.modules.inventario.domain.exceptions import ProductoNoManejaInventarioException
 from app.modules.inventario.domain.events.inventario_events import InventarioActualizado, AjusteInventarioRegistrado
 from app.modules.inventario.application.ports.product_lookup import ProductLookup
@@ -14,25 +16,27 @@ from app.modules.inventario.application.event_dispatcher import EventDispatcher
 
 @dataclass(frozen=True)
 class RegistrarAjusteCommand:
-    company_id: UUID
-    product_id: UUID
+    company_id: uuid.UUID
+    product_id: uuid.UUID
     physical_quantity: Decimal
-    supervisor_id: UUID
+    supervisor_id: uuid.UUID
     notes: str | None = None
 
 class RegistrarAjusteUseCase:
     """
     Application Use Case to adjust logical stock levels to match physical audit counts.
-    Creates a corrective ENTRADA or SALIDA movement.
+    Creates a corrective ENTRADA or SALIDA movement and overwrites fast stock balance (ExistenciaProducto).
     """
     def __init__(
         self,
         repository: MovimientoInventarioRepository,
+        existencia_repository: ExistenciaRepository,
         db: Session,
         event_dispatcher: EventDispatcher,
         product_lookup: ProductLookup
     ):
         self.repository = repository
+        self.existencia_repository = existencia_repository
         self.db = db
         self.event_dispatcher = event_dispatcher
         self.product_lookup = product_lookup
@@ -51,14 +55,17 @@ class RegistrarAjusteUseCase:
         if not product_details.controls_stock:
             raise ProductoNoManejaInventarioException(command.product_id)
 
-        # 3. Derive stock balance
-        movements = self.repository.get_by_product_id(command.company_id, command.product_id)
-        system_quantity = Decimal("0.0000")
-        for m in movements:
-            if m.type == "ENTRADA":
-                system_quantity += m.quantity
-            elif m.type == "SALIDA":
-                system_quantity -= m.quantity
+        # 3. Retrieve ExistenciaProducto to find system quantity (logical stock)
+        existencia = self.existencia_repository.get_by_product_id(command.company_id, command.product_id)
+        if existencia is None:
+            existencia = ExistenciaProducto(
+                id=uuid.uuid4(),
+                company_id=command.company_id,
+                product_id=command.product_id,
+                stock=Decimal("0.0000")
+            )
+
+        system_quantity = existencia.stock
 
         # 4. Calculate difference
         difference = command.physical_quantity - system_quantity
@@ -75,7 +82,10 @@ class RegistrarAjusteUseCase:
             mov_type = "SALIDA"
             qty = abs(difference)
 
-        # 6. Construct domain entities
+        # 6. Apply adjustment to stock balance
+        existencia.ajustar(command.physical_quantity)
+
+        # 7. Construct domain entities
         now = datetime.now(timezone.utc)
         movimiento_id = uuid.uuid4()
         ajuste_id = uuid.uuid4()
@@ -97,24 +107,24 @@ class RegistrarAjusteUseCase:
             origin_document_id=None,
             created_at=now,
             created_by=command.supervisor_id,
-            notes=command.notes or f"Ajuste correctivo de inventario física. Diferencia: {difference}",
+            notes=command.notes or f"Ajuste correctivo de inventario físico. Diferencia: {difference}",
             ajuste=ajuste
         )
 
-        # 7. Execute transaction (Unit of Work)
+        # 8. Execute transaction (Unit of Work)
         try:
             with self.db.begin_nested():
                 saved_mov = self.repository.save(movimiento)
+                self.existencia_repository.save(existencia)
                 
-                # Dispatch events sychronously
+                # Dispatch events synchronously
                 change_qty = qty if mov_type == "ENTRADA" else -qty
-                new_balance = system_quantity + change_qty
                 
                 ev_update = InventarioActualizado(
                     product_id=saved_mov.product_id,
                     company_id=saved_mov.company_id,
                     quantity_change=change_qty,
-                    new_balance=new_balance,
+                    new_balance=existencia.stock,
                     type=mov_type,
                     concept="AJUSTE",
                     occurred_at=saved_mov.created_at

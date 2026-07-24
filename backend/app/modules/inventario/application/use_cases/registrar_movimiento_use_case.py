@@ -6,39 +6,40 @@ from sqlalchemy.orm import Session
 
 from app.common.exceptions import ValidationException
 from app.modules.inventario.domain.entities.movimiento import MovimientoInventario
+from app.modules.inventario.domain.entities.existencia import ExistenciaProducto
 from app.modules.inventario.domain.repositories.movimiento_repository import MovimientoInventarioRepository
-from app.modules.inventario.domain.exceptions import (
-    StockInsuficienteException,
-    ProductoNoManejaInventarioException
-)
+from app.modules.inventario.domain.repositories.existencia_repository import ExistenciaRepository
+from app.modules.inventario.domain.exceptions import ProductoNoManejaInventarioException
 from app.modules.inventario.domain.events.inventario_events import InventarioActualizado
 from app.modules.inventario.application.ports.product_lookup import ProductLookup
 from app.modules.inventario.application.event_dispatcher import EventDispatcher
 
 @dataclass(frozen=True)
 class RegistrarMovimientoCommand:
-    company_id: UUID
-    product_id: UUID
+    company_id: uuid.UUID
+    product_id: uuid.UUID
     type: str  # ENTRADA, SALIDA
     concept: str
     quantity: Decimal
-    created_by: UUID
-    origin_document_id: UUID | None = None
+    created_by: uuid.UUID
+    origin_document_id: uuid.UUID | None = None
     notes: str | None = None
 
 class RegistrarMovimientoUseCase:
     """
     Application Use Case to record inventory movements (additions or subtractions).
-    Coordinates SQLite transactional boundary and verifies inventory constraints.
+    Coordinates SQLite transactional boundary and updates ExistenciaProducto fast balance.
     """
     def __init__(
         self,
         repository: MovimientoInventarioRepository,
+        existencia_repository: ExistenciaRepository,
         db: Session,
         event_dispatcher: EventDispatcher,
         product_lookup: ProductLookup
     ):
         self.repository = repository
+        self.existencia_repository = existencia_repository
         self.db = db
         self.event_dispatcher = event_dispatcher
         self.product_lookup = product_lookup
@@ -53,19 +54,23 @@ class RegistrarMovimientoUseCase:
         if not product_details.controls_stock:
             raise ProductoNoManejaInventarioException(command.product_id)
 
-        # 2. Derive stock balance by aggregating existing movements (Kardex logic)
-        movements = self.repository.get_by_product_id(command.company_id, command.product_id)
-        current_stock = Decimal("0.0000")
-        for m in movements:
-            if m.type == "ENTRADA":
-                current_stock += m.quantity
-            elif m.type == "SALIDA":
-                current_stock -= m.quantity
+        # 2. Retrieve fast stock balance projection (ExistenciaProducto)
+        existencia = self.existencia_repository.get_by_product_id(command.company_id, command.product_id)
+        if existencia is None:
+            existencia = ExistenciaProducto(
+                id=uuid.uuid4(),
+                company_id=command.company_id,
+                product_id=command.product_id,
+                stock=Decimal("0.0000")
+            )
 
-        # 3. Check for stock shortage if negative stock is prohibited
-        if command.type == "SALIDA" and not product_details.allows_negative:
-            if current_stock - command.quantity < Decimal("0.0000"):
-                raise StockInsuficienteException(command.product_id, float(current_stock), float(command.quantity))
+        # 3. Apply domain invariants and update stock balance
+        if command.type == "ENTRADA":
+            existencia.incrementar(command.quantity)
+        elif command.type == "SALIDA":
+            existencia.decrementar(command.quantity, allows_negative=product_details.allows_negative)
+        else:
+            raise ValueError(f"Tipo de movimiento inválido: {command.type}")
 
         # 4. Construct domain aggregate root (runs entity-level validation)
         now = datetime.now(timezone.utc)
@@ -86,16 +91,16 @@ class RegistrarMovimientoUseCase:
         try:
             with self.db.begin_nested():
                 saved_mov = self.repository.save(movimiento)
+                self.existencia_repository.save(existencia)
                 
-                # Sychronously dispatch consistency events
+                # Synchronously dispatch consistency events
                 change = command.quantity if command.type == "ENTRADA" else -command.quantity
-                new_balance = current_stock + change
                 
                 event = InventarioActualizado(
                     product_id=saved_mov.product_id,
                     company_id=saved_mov.company_id,
                     quantity_change=change,
-                    new_balance=new_balance,
+                    new_balance=existencia.stock,
                     type=saved_mov.type,
                     concept=saved_mov.concept,
                     occurred_at=saved_mov.created_at
