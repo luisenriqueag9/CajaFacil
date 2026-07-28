@@ -26,9 +26,168 @@ La capacidad de Operación Diaria describe detalladamente el flujo de trabajo co
 
 ---
 
-## Objetivos de Rendimiento del Producto
+## 1. Principios Operativos del POS
 
-Las siguientes métricas no representan limitantes exclusivamente de infraestructura técnica, sino **metas de diseño de producto** para garantizar que CajaFácil sea la herramienta POS más ágil y fluida del mercado.
+La filosofía del producto CajaFácil se rige por un conjunto de directrices operativas que garantizan la agilidad, robustez y resiliencia en el mostrador. Toda decisión de diseño de pantalla e interacción debe estar alineada con estos principios:
+
+### A) Nunca detener al cajero innecesariamente
+- **Descripción**: La interfaz debe procesar y reaccionar de forma inmediata. No se deben presentar pantallas modales de confirmación o de éxito (tipo "Venta registrada con éxito, presione Aceptar") que requieran atención física y detengan el flujo del cajero.
+- **Justificación**: En horas pico, cada segundo ahorrado en el escaneo y cobro reduce las colas, mejora la satisfacción del cliente y evita cuellos de botella operativos en el mostrador.
+
+### B) Nunca perder una venta
+- **Descripción**: El sistema debe estar diseñado para facturar bajo cualquier circunstancia física adversa (fallas de red, pérdida de conexión a base de datos centralizada, etc.).
+- **Justificación**: Un POS que se detiene por falta de internet representa pérdidas económicas inmediatas y desconfianza en el cliente. La continuidad operativa es la prioridad número uno.
+
+### C) Priorizar teclado sobre mouse
+- **Descripción**: El 100% del flujo transaccional (desde la apertura de caja hasta el cierre) debe ser ejecutable utilizando atajos del teclado. El cursor debe retornar y enfocarse automáticamente en el campo de escaneo principal tras cada acción.
+- **Justificación**: El uso del mouse obliga al cajero a retirar la mano del teclado y desviar la vista de los productos físicos, duplicando los tiempos de operación de mostrador.
+
+### D) Mouse opcional (Respaldo táctil)
+- **Descripción**: El mouse es un mecanismo de respaldo o exploración secundaria. La interfaz debe poseer botones interactivos visibles con sus respectivos atajos de teclado rotulados, permitiendo el uso táctil (touchscreen) o click de mouse para el personal en entrenamiento.
+- **Justificación**: Permite una curva de aprendizaje baja para cajeros novatos sin sacrificar la velocidad de los cajeros expertos.
+
+### E) Minimizar confirmaciones
+- **Descripción**: Las tareas rutinarias y repetitivas (agregar productos, cambiar precios configurados, seleccionar consumidor final) no deben solicitar confirmación del usuario. Las confirmaciones modales se reservan estrictamente para acciones destructivas.
+- **Justificación**: Evita la "ceguera de confirmación", donde el usuario presiona "Sí" mecánicamente a cada popup sin leer el contenido, invalidando el propósito de la confirmación misma.
+
+### F) Confirmar únicamente acciones destructivas
+- **Descripción**: Solo se requiere una confirmación modal y explícita cuando la acción resulte en pérdida irreversible de trabajo o tenga implicaciones financieras críticas.
+- **Ejemplos**: Cancelación del carrito de compras activo (`ESC`), salida del turno de caja sin arqueo y anulación de facturas emitidas.
+- **Justificación**: Protege la integridad de los datos del negocio y previene pérdidas accidentales por errores de digitación rápida.
+
+### G) Continuar operando sin Internet (Offline-First)
+- **Descripción**: Toda la lógica del negocio (cálculo de impuestos, descuentos, validación de stock caché local, checkout) se ejecuta de forma local. La conexión a la red de nube centralizada ocurre en segundo plano de manera asíncrona.
+- **Justificación**: Asegura la independencia de la terminal física ante inestabilidades del proveedor de internet local, manteniendo el mostrador activo de manera ininterrumpida.
+
+### H) Mantener la continuidad del trabajo
+- **Descripción**: Ante un cierre inesperado del software o un fallo físico de energía, la pantalla del POS debe restaurar exactamente el último estado en el que se encontraba (el carrito activo con sus ítems cargados y la sesión de caja intacta) al reiniciarse la terminal.
+- **Justificación**: Evita tener que re-escanear una compra grande a la mitad del checkout, minimizando la frustración del cajero y del cliente afectado.
+
+---
+
+## 2. Objetivos de Interacción y Rapidez
+
+Los siguientes objetivos definen las metas de diseño de producto y el costo de interacción física para los flujos más recurrentes de la operación diaria.
+
+### A) Venta Rápida (Escaneo Continuo)
+- **Clics de mouse**: 0
+- **Uso del teclado**: 100% (solo escáner enviando código + `Enter`).
+- **Cantidad de pasos**: 1 (pasar el producto por el lector).
+- **Meta de rapidez**: < 100 ms por producto ingresado. El cursor permanece en el campo de entrada listo para el siguiente artículo.
+
+### B) Búsqueda Manual de Producto
+- **Clics de mouse**: 0
+- **Uso del teclado**: 100% (Escribir letras -> Flechas arriba/abajo -> `Enter`).
+- **Cantidad de pasos**: 2 (comenzar a escribir el nombre del artículo y presionar `Enter` en la sugerencia seleccionada).
+- **Meta de rapidez**: < 200 ms en mostrar sugerencias dinámicas autocompletables.
+
+### C) Suspensión de Venta (Hold)
+- **Clics de mouse**: 0
+- **Uso del teclado**: 100% (presionar `F6`).
+- **Cantidad de pasos**: 1 (presionar atajo y confirmar instantáneamente en background).
+- **Meta de rapidez**: < 800 ms. Limpia la pantalla y abre un nuevo carrito de inmediato.
+
+### D) Recuperación de Venta (Resume)
+- **Clics de mouse**: 0
+- **Uso del teclado**: 100% (`F7` -> Flechas para elegir de la cola -> `Enter`).
+- **Cantidad de pasos**: 2 (abrir cola y seleccionar ticket).
+- **Meta de rapidez**: < 1.5 segundos en reconstruir el carrito seleccionado en pantalla.
+
+### E) Checkout de Efectivo (Método Estándar)
+- **Clics de mouse**: 0
+- **Uso del teclado**: 100% (`F12` / `+` -> Digitar efectivo recibido o seleccionar billete sugerido -> `Enter`).
+- **Cantidad de pasos**: 2 (abrir cobro y presionar Enter para confirmar pago).
+- **Meta de rapidez**: < 2.0 segundos totales desde que se abre el panel de cobro hasta que se envía la orden de impresión térmica.
+
+### F) Retiro Auxiliar de Caja
+- **Clics de mouse**: 0
+- **Uso del teclado**: 100% (`F11` -> Elegir Retiro -> Digitar Monto -> Escribir Justificación -> `Enter`).
+- **Cantidad de pasos**: 3 (abrir menú auxiliar, rellenar formulario breve y guardar).
+- **Meta de rapidez**: < 10 segundos en completarse por parte del operador.
+
+---
+
+## 3. Atajos Oficiales del POS (Hotkeys)
+
+Los atajos de teclado están asignados de manera ergonómica para favorecer la mano izquierda en la zona de funciones (`F1`-`F12`, `ESC`) y la mano derecha en el bloque numérico (`+`, `Enter`, `DEL`).
+
+| Tecla / Atajo | Acción Oficial en POS | Justificación Ergonómica y Usabilidad |
+| :--- | :--- | :--- |
+| **`F1`** | **Nueva Venta / Limpiar Carrito** | Permite reiniciar el mostrador rápidamente tras una venta. Ubicada en la esquina superior izquierda para fácil localización sin ver el teclado. |
+| **`F2`** | **Seleccionar / Buscar Cliente** | Abre el buscador de clientes. Permite asociar una venta nominativa o validar crédito antes de comenzar la compra. |
+| **`F3`** | **Consulta Lateral (Precios/Stock)** | Abre y cierra el visor lateral flotante. Permite responder consultas de clientes sobre otros productos sin perder los ítems que ya están en el carrito. |
+| **`F4`** | **Agregar Producto Genérico** | Permite la facturación rápida de artículos especiales o servicios sin código máster, ingresando precio y descripción manual. |
+| **`F5`** | **Modificar Cantidad de Línea** | Enfoca el campo de cantidad de la línea seleccionada en el carrito para actualización rápida (ej. cambiar 1 a 12 unidades). |
+| **`F6`** | **Suspender Carrito (Hold)** | Coloca la venta activa en la cola local temporal de espera para liberar la caja ante inconvenientes del cliente. |
+| **`F7`** | **Ver/Recuperar Suspendidas** | Abre la cola de tickets suspendidos en espera para reanudar el cobro de inmediato. |
+| **`F8`** | **Buscador Avanzado Catálogo** | Abre una ventana modal de catálogo completo con filtros y visualización de stock para cuando el cajero desconoce el código y el nombre. |
+| **`F9`** | **Aplicar Descuento** | Abre la ventana de descuento (porcentaje o valor) sobre el producto seleccionado o sobre el total de la venta. |
+| **`F11`** | **Panel Auxiliar de Caja** | Abre el menú para realizar arqueos intermedios, depósitos, retiros auxiliares y cierre de caja. |
+| **`F12`** o **`+`** (Num) | **Proceder al Checkout (Cobro)** | Dispara la pantalla de selección de métodos de pago. El uso del signo `+` del teclado numérico permite ingresar al cobro sin retirar la mano derecha del bloque numérico. |
+| **`ESC`** | **Cancelar / Limpiar Carrito** | Limpia el carrito activo (requiere confirmación `Y`/`N`). Sirve también para cerrar cualquier panel modal o ventana emergente y regresar el foco al buscador. |
+| **`DEL`** | **Eliminar Línea Seleccionada** | Borra el producto seleccionado en la grilla del carrito. Atajo rápido y directo de remoción. |
+| **`Enter`** | **Confirmar Acción / Venta** | Funciona como confirmación universal en diálogos y finalización de cobros en pantalla de checkout. |
+| **`Flechas ↑ / ↓`** | **Navegar Grilla del Carrito** | Permite al cajero moverse entre los diferentes productos cargados en la grilla activa para modificarlos o borrarlos. |
+
+---
+
+## 4. Integración Funcional con Hardware
+
+El POS de CajaFácil interactúa con periféricos externos mediante los siguientes comportamientos funcionales esperados:
+
+### A) Lector de Códigos de Barras
+- **Comportamiento**: El lector debe emular un teclado USB (Keyboard Wedge) enviando el código numérico y un sufijo de retorno de carro (`Enter`).
+- **Mecanismo del POS**: La ventana principal posee un listener global que detecta la entrada rápida de caracteres. Si el lector envía un código, el POS captura la cadena, detiene cualquier entrada manual del cajero por una fracción de segundo, busca el código en la base local y agrega el producto al carrito. No debe requerir que el cajero haga clic previo sobre la barra de búsqueda.
+
+### B) Impresora Térmica de Tickets (Ticketera)
+- **Comportamiento**: Al confirmarse un cobro o una operación auxiliar (apertura, retiro, arqueo, cierre), el POS genera un documento de texto formateado en comandos ESC/POS y lo envía al spooler de impresión local.
+- **Flujo**: La impresión es asíncrona; el cajero no debe experimentar bloqueos de pantalla esperando la respuesta física de la impresora. La pantalla del POS se limpia para una nueva venta inmediatamente al enviar los datos a la cola de impresión local.
+
+### C) Gaveta de Dinero (Cajón de Efectivo)
+- **Comportamiento**: La gaveta de dinero física está conectada directamente a la impresora térmica mediante un cable RJ11.
+- **Mecanismo del POS**: Al procesar una venta pagada total o parcialmente con la forma de pago **Efectivo**, o al realizar operaciones auxiliares de tipo **Retiro** o **Arqueo**, el POS envía el comando eléctrico de apertura (`pulse`) a la impresora térmica. Esto abre automáticamente la gaveta para depositar el dinero y dar el cambio de forma ágil. Para cobros con Tarjeta, Transferencia o Crédito, la gaveta permanece cerrada por seguridad.
+
+### D) Báscula / Balanza Electrónica
+- **Comportamiento**: Utilizada para productos a granel. 
+- **Mecanismo del POS**: Al ingresar al carrito un producto configurado como "Decimal (Peso)", el POS lee el puerto serial/USB configurado de la balanza en tiempo real. La interfaz del POS muestra el peso actual de la báscula de forma dinámica en pantalla. Cuando se estabiliza la báscula, el cajero presiona `Enter` y el peso se consolida automáticamente como la cantidad de la línea del carrito.
+
+### E) Visor para Cliente (Customer Display)
+- **Comportamiento**: Pequeña pantalla digital orientada al cliente.
+- **Mecanismo del POS**: El POS envía de forma continua el nombre del producto escaneado y su precio actual. Al abrirse la pantalla de cobro, el visor muestra: *"TOTAL A PAGAR: L XX.XX"*. Al finalizar el checkout, muestra: *"CAMBIO / VUELTO: L XX.XX"*. Si la caja entra en reposo, muestra un mensaje de bienvenida personalizado por la empresa.
+
+### F) Terminal de Pago Bancario (Datáfono - Futuro)
+- **Comportamiento**: Integración transaccional con terminales de tarjetas.
+- **Mecanismo del POS**: En el MVP, el cobro es ciego (el cajero pasa la tarjeta por el datáfono físico independiente e introduce manualmente la referencia en el POS). En futuras fases de integración directa, al seleccionar "Tarjeta" en el checkout, el POS enviará el monto al datáfono por red o cable y esperará de forma no bloqueante la respuesta de "Aprobado" o "Rechazado" para avanzar en el checkout de manera automática.
+
+---
+
+## 5. Operaciones en Contingencia
+
+Las siguientes especificaciones describen la resiliencia del punto de venta ante eventos excepcionales, garantizando que el comercio nunca detenga su operación y que la información esté protegida.
+
+### A) Pérdida Repentina de Energía Eléctrica
+- **Problema**: El equipo de computación de la caja se apaga a la mitad de una transacción por corte eléctrico.
+- **Comportamiento esperado**: La base de datos local SQLite cuenta con transacciones atómicas seguras y el motor de ventas realiza un autoguardado continuo de la sesión activa en una tabla temporal. Al reencender el equipo e iniciar sesión el cajero, el POS recupera de inmediato el estado exacto del carrito y la sesión de caja antes del corte, permitiendo continuar con el cobro o anularlo sin pérdida de datos del inventario o caja.
+
+### B) Cierre Inesperado de la Aplicación (Crash)
+- **Problema**: La aplicación POS se cierra inesperadamente debido a una falla del sistema operativo o del framework de Flutter.
+- **Comportamiento esperado**: Al igual que ante la pérdida de energía, el sistema no limpia la sesión activa de caja en la base de datos persistente. La sesión se reanuda de forma inmediata al volver a abrir la aplicación, restaurando los productos que estaban escaneados en el carrito activo del cajero.
+
+### C) Impresiones Pendientes en Cola (Spooler local)
+- **Problema**: La ticketera se queda sin papel térmico o experimenta un atasco físico mientras se emite una factura.
+- **Comportamiento esperado**: El POS no aborta ni revierte la venta en el dominio, ya que la propiedad ya cambió y el pago fue recibido. La factura física se guarda en una cola local de impresión con estado "Pendiente". El POS muestra una notificación de advertencia en la esquina de la pantalla. Una vez corregido el problema físico del hardware, el cajero puede presionar un botón de "Reintentar Impresiones Pendientes" o reimprimir directamente el último ticket desde el historial rápido.
+
+### D) Sincronización Diferida y Pérdida Prolongada de Internet
+- **Problema**: La terminal del POS pierde conexión con la nube durante horas o días.
+- **Comportamiento esperado**: El motor operativo continúa permitiendo login local (usando credenciales cacheadas cifradas), apertura de turnos, escaneo de productos, validación de stock de sucursales en base local, y cobros. 
+- **Resolución**:
+  - Los eventos de dominio generados (`VentaConfirmada`, `MovimientoCajaRegistrado`, `MovimientoInventarioRegistrado`) se encolan en una tabla local SQLite de sincronización (`sync_queue`).
+  - Al restaurarse la red, un demonio en segundo plano envía las transacciones de forma asíncrona por lotes (batch) a la API SaaS central de CajaFácil.
+  - Si ocurren conflictos de stock (venta offline de un producto con stock cero en la nube), el servidor central procesa la venta, ajusta el inventario y notifica una alerta al dashboard de administración en un log de conciliación de inventario (`conflict_stock_log`), pero nunca bloquea la venta del cajero local.
+
+---
+
+## 6. Objetivos de Rendimiento del Producto (Metas de Diseño)
 
 | Evento de Operación | Meta de Producto (Límite Máximo) | Justificación de Negocio |
 | :--- | :--- | :--- |
@@ -43,7 +202,7 @@ Las siguientes métricas no representan limitantes exclusivamente de infraestruc
 
 ---
 
-## Diagrama de la Jornada Operativa Completa
+## 7. Diagrama de la Jornada Operativa Completa
 
 El siguiente flujo representa la máquina de estados de la operación diaria del mostrador y su interacción con los distintos procesos transaccionales:
 
@@ -120,7 +279,7 @@ stateDiagram-v2
 
 ---
 
-## Actores Involucrados
+## 8. Actores Involucrados
 
 Para garantizar la seguridad transaccional, CajaFácil define los siguientes perfiles de usuario en el POS:
 
@@ -138,7 +297,7 @@ Para garantizar la seguridad transaccional, CajaFácil define los siguientes per
 
 ---
 
-## 1. Inicio de Jornada
+## 9. Inicio de Jornada (Detalles Adicionales)
 
 El inicio de jornada garantiza que ningún cajero opere el sistema sin un flujo formal de responsabilidades financieras y trazabilidad de auditoría.
 
@@ -161,35 +320,9 @@ El inicio de jornada garantiza que ningún cajero opere el sistema sin un flujo 
 
 ---
 
-## 2. Venta (Operación en Mostrador)
+## 10. Venta (Detalles de Carrito y Control)
 
 El mostrador es el núcleo de CajaFácil. Su diseño está optimizado para que la interacción sea intuitiva y extremadamente rápida.
-
-```
-+--------------------------------------------------------------------------------+
-| CajaFácil POS - SUCURSAL NORTE  [Caja #1 - Abierta]  Usuario: Luis E. (Cajero) |
-+--------------------------------------------------------------------------------+
-| CLIENTE: Consumidor Final (F2)          | BUSCAR: [ 7501002341...           ]  |
-+-----------------------------------------+--------------------------------------+
-| DETALLE DE COMPRA (F1 para Nuevo)                                              |
-| #  CÓDIGO      PRODUCTO                CANTIDAD    PRECIO      DESC     TOTAL  |
-| 1  75010012    Leche Entera Sula 1L    2.00        L 32.00     L 0.00   L 64.00|
-| 2  98124011    Pan Molde Bimbo 450g    1.00        L 48.00     L 2.00   L 46.00|
-| 3  *BAL-032    Tomate Manzano (Granel) 1.250 kg    L 24.00/kg  L 0.00   L 30.00|
-|                                                                                |
-|                                                                                |
-|                                                                                |
-|                                                                                |
-|                                                                                |
-+--------------------------------------------------------------------------------+
-| Líneas: 3 | Unidades: 4.25                  | SUBTOTAL:                L 140.00|
-| [F6] Suspender | [F7] Recuperar             | IMPUESTO (15%):           L 21.00|
-| [F8] Buscar P. | [F9] Descuento             | DESCUENTO:                L  2.00|
-| [DEL] Borrar   | [ESC] Cancelar             | TOTAL A PAGAR:           L 159.00|
-+--------------------------------------------------------------------------------+
-| [F12] COBRAR / PAGAR --------------------------------------------------------- |
-+--------------------------------------------------------------------------------+
-```
 
 ### El Carrito y la Pantalla de Ventas
 La pantalla de ventas mantiene un diseño limpio y enfocado. El foco del teclado está permanentemente en la barra de búsqueda o escaneo principal. 
@@ -217,7 +350,7 @@ La pantalla de ventas mantiene un diseño limpio y enfocado. El foco del teclado
 
 ---
 
-## 3. Ventas Suspendidas (Hold / Resume)
+## 11. Ventas Suspendidas (Hold / Resume - Reglas)
 
 En tiendas minoristas es muy frecuente que un cliente olvide su billetera o regrese al mostrador a buscar otro artículo, bloqueando la fila de pago. La suspensión de ventas resuelve este problema crítico.
 
@@ -241,37 +374,9 @@ En tiendas minoristas es muy frecuente que un cliente olvide su billetera o regr
 
 ---
 
-## 4. Checkout (Flujo de Cobro)
+## 12. Checkout (Flujo de Cobro y Métodos)
 
 El checkout es el momento más crítico para minimizar el tiempo de espera del cliente. CajaFácil permite liquidar el importe del carrito mediante múltiples formas de pago.
-
-```
-+--------------------------------------------------------------------------------+
-| CHECKOUT - CONFIRMACIÓN DE PAGO                                                |
-+--------------------------------------------------------------------------------+
-| TOTAL A COBRAR:                                                       L 159.00 |
-+--------------------------------------------------------------------------------+
-| MÉTODOS DE PAGO:                                                               |
-|                                                                                |
-| 1. EFECTIVO [F1] ------------------------------------------------------------- |
-|    [ Recibido: [ L 200.00         ] ]  --> CAMBIO / VUELTO: L 41.00            |
-|    Sugeridos: [ L 159.00 ]  [ L 200.00 ]  [ L 500.00 ]                         |
-|                                                                                |
-| 2. TARJETA [F2] -------------------------------------------------------------- |
-|    Monto: [               ]  Referencia Transacción: [            ]            |
-|                                                                                |
-| 3. TRANSFERENCIA [F3] -------------------------------------------------------- |
-|    Monto: [               ]  Referencia Banco: [                  ]            |
-|                                                                                |
-| 4. CRÉDITO [F4] -------------------------------------------------------------- |
-|    Monto: [               ]  CLIENTE: [ Juan Pérez                      ]      |
-|    Saldo Disponible: L 1,500.00                                                |
-+--------------------------------------------------------------------------------+
-| COBERTURA DEL PAGO: 100% (L 159.00 de L 159.00)                                |
-+--------------------------------------------------------------------------------+
-| [Enter] Confirmar e Imprimir Factura                                           |
-+--------------------------------------------------------------------------------+
-```
 
 ### Canales de Pago Disponibles
 - **Efectivo**: El método más veloz. El sistema muestra botones inteligentes con montos sugeridos (ej. el importe exacto, el billete superior inmediato como L 200 o L 500). Al ingresar el monto recibido, el sistema calcula de forma gigante el **Cambio (Vuelto)** en pantalla.
@@ -286,40 +391,9 @@ Al presionar `Enter` con el cobro completado, se dispara el proceso de persisten
 
 ---
 
-## 5. Eventos y Acciones Automáticas Post-Venta
+## 13. Eventos y Acciones Automáticas Post-Venta
 
 Una vez confirmada la venta en el mostrador, ocurren una serie de integraciones lógicas que aseguran que el ERP/SaaS esté al día. Esto se procesa de forma atómica a través de eventos de dominio de la siguiente manera:
-
-```
-                  +--------------------------------+
-                  |  Pago Confirmado en Checkout  |
-                  +--------------------------------+
-                                  |
-                                  v
-                    [Evento: VentaConfirmada]
-                                  |
-         +------------------------+------------------------+
-         |                        |                        |
-         v                        v                        v
-+------------------+     +------------------+     +------------------+
-|   Dominio CAJA   |     |Dominio INVENTARIO|     | Dominio CRÉDITO  |
-+------------------+     +------------------+     +------------------+
-| Registra         |     | Genera           |     | Registra         |
-| MovimientoCaja   |     | MovimientoStock  |     | Deuda y saldo   |
-| (Ingreso         |     | (Salida física   |     | en la cuenta     |
-|  efectivo/tarj)  |     |  de inventario)  |     | del cliente      |
-+------------------+     +------------------+     +------------------+
-         |                        |                        |
-         +------------------------+------------------------+
-                                  |
-                                  v
-                   [Generación de Comprobante]
-                                  |
-                                  v
-                  +--------------------------------+
-                  |   Envío a Spooler de Impresión |
-                  +--------------------------------+
-```
 
 1. **Registrar Venta**: Se persiste el agregado `Venta` con estado `Confirmada` junto a sus detalles y formas de pago aceptadas.
 2. **Registrar Movimiento en Caja**: El dominio Caja recibe la notificación e inserta un `MovimientoCaja` de tipo "Ingreso por Venta" por los importes en efectivo, tarjeta o transferencia recibidos.
@@ -329,7 +403,7 @@ Una vez confirmada la venta en el mostrador, ocurren una serie de integraciones 
 
 ---
 
-## 6. Operaciones Auxiliares de Caja
+## 14. Operaciones Auxiliares de Caja (Control Gaveta)
 
 El control de la gaveta física requiere que los flujos monetarios no relacionados con ventas directas sean registrados de manera formal (`RN-501`).
 
@@ -364,7 +438,7 @@ El control de la gaveta física requiere que los flujos monetarios no relacionad
 
 ---
 
-## 7. Consultas Rápidas (En Caliente)
+## 15. Consultas Rápidas (En Caliente - F2 / F3)
 
 Para que el cajero no pierda la venta activa al responder preguntas del cliente, CajaFácil implementa consultas superpuestas no destructivas.
 
@@ -378,84 +452,23 @@ Para que el cajero no pierda la venta activa al responder preguntas del cliente,
 
 ---
 
-## 8. Manejo de Errores y Resiliencia Offline
+## 16. Decisiones UX Justificadas
 
-Como sistema **Offline-First**, CajaFácil debe garantizar la resiliencia física de la terminal de ventas en situaciones de falla comunes en el comercio minorista latinoamericano.
+Cada decisión importante de interacción en CajaFácil está guiada por la resolución de un problema concreto del cajero minorista:
 
-### Comportamiento del POS ante Contingencias
-
-```
-+--------------------------+-----------------------------------------------------------+
-| Falla / Contingencia     | Comportamiento y Acción del POS (CajaFácil)               |
-+--------------------------+-----------------------------------------------------------+
-| Corte de Internet / Red  | - La venta NO se detiene. El POS almacena las facturas    |
-|                          |   en la base de datos local SQLite embedded.              |
-|                          | - Un indicador en pantalla muestra: "Modo Offline Activo". |
-|                          | - Los eventos de dominio se encolan localmente.          |
-|                          | - Al volver la red, el motor sincroniza en segundo plano. |
-+--------------------------+-----------------------------------------------------------+
-| Impresora de Tickets     | - El POS muestra un mensaje de alerta: "Impresora fuera   |
-| Desconectada / Sin papel |   de línea".                                              |
-|                          | - El sistema encola el documento de impresión en el       |
-|                          |   Spooler local.                                          |
-|                          | - Ofrece un botón visible de "Reintentar Impresión"       |
-|                          |   o "Exportar a PDF / Enviar por Email".                  |
-+--------------------------+-----------------------------------------------------------+
-| Lector de Barras Dañado  | - El cajero puede cambiar al modo teclado usando `F8`     |
-|                          |   para búsqueda por nombre o ingresar el código de        |
-|                          |   barras manualmente en el buscador principal.            |
-+--------------------------+-----------------------------------------------------------+
-| Intento de Venta con     | - Si el producto tiene `controls_stock = True` y          |
-| Stock Insuficiente       |   `allows_negative = False`, el sistema emite una alerta  |
-|                          |   y bloquea el agregado del ítem al carrito.              |
-|                          | - Si `allows_negative = True`, permite agregarlo y        |
-|                          |   registra la existencia negativa provisional.            |
-+--------------------------+-----------------------------------------------------------+
-| Abandono o Pago          | - Si el cliente desiste o su tarjeta es rechazada en el   |
-| Incompleto               |   checkout, la venta permanece en la pantalla de cobro    |
-|                          |   permitiendo cambiar el medio de pago o cancelar.        |
-+--------------------------+-----------------------------------------------------------+
-| Intento de Venta en      | - El sistema bloquea de raíz el checkout si no existe una  |
-| Caja Cerrada             |   sesión de caja activa y abierta para el cajero.         |
-+--------------------------+-----------------------------------------------------------+
-```
+1. **Problema**: El cajero comete errores al calcular el cambio del efectivo en horas de alta presión.
+   - **Solución**: La interfaz de checkout muestra botones de billetes sugeridos gigantes en base al total a pagar e imprime de forma ultra destacada en pantalla el vuelto matemático resultante.
+   - **Beneficio**: Reduce drásticamente los errores de entrega de dinero y acelera el paso de clientes.
+2. **Problema**: Ventas lentas debido a popups continuos de confirmación en el mostrador.
+   - **Solución**: Las notificaciones normales (agregar al carrito, cambiar cantidad) se reemplazan por "Toasts" auto-desvanecibles no intrusivos que no bloquean el teclado.
+   - **Beneficio**: El cajero mantiene un ritmo de trabajo fluido e ininterrumpido.
+3. **Problema**: Pérdida de foco en el campo de código de barras tras realizar una búsqueda de precio secundaria.
+   - **Solución**: El cursor del teclado se re-enfoca automáticamente al buscador de venta principal tras cerrar cualquier panel con la tecla `ESC` o `Enter`.
+   - **Beneficio**: Elimina la necesidad de hacer clics manuales de re-foco con el mouse, reduciendo la fatiga.
 
 ---
 
-## 9. Reglas y Directrices de Experiencia de Usuario (UX)
-
-Para garantizar la velocidad en mostrador, CajaFácil impone reglas estrictas sobre el diseño de la interfaz:
-
-### A) Navegación y Control por Teclado Obligatorios
-El cajero no debe retirar las manos del teclado para operar el POS. El uso del mouse es considerado un fallo de velocidad de diseño.
-
-#### Matriz Oficial de Atajos del Teclado (Hotkeys)
-- `F1`: Inicializar Carrito Nuevo / Nueva Venta (Limpia la pantalla tras una venta confirmada).
-- `F2`: Enfocar selector de Cliente (Consumidor Final por defecto).
-- `F3`: Abrir / Cerrar Panel Lateral de Consulta Rápida (Precios / Existencias).
-- `F4`: Agregar Producto Genérico (Permite fijar precio manual al vuelo).
-- `F5`: Cambiar Cantidad de la línea seleccionada en el carrito.
-- `F6`: Suspender Carrito Activo (Hold).
-- `F7`: Ver lista de Ventas Suspendidas para recuperar (Resume).
-- `F8`: Abrir Buscador Avanzado de Productos (Grid catálogo).
-- `F9`: Aplicar Descuento a la línea seleccionada o al total.
-- `F11`: Abrir Panel de Operaciones Auxiliares y Cierre de Caja.
-- `F12` o `+` (Teclado Numérico): Ir a Checkout (Pagar).
-- `ESC`: Cancelar Operación en curso / Limpiar carrito activo.
-- `DEL` (Suprimir): Borrar línea seleccionada en el carrito.
-- `Flechas Arriba / Abajo`: Navegar entre las líneas del carrito de ventas.
-
-### B) Escaneo Continuo Transparente
-La interfaz debe ser ciega al foco para el escaneo de códigos de barra. Sin importar qué botón o menú esté seleccionado de forma secundaria, si se detecta una entrada de caracteres rápidos con terminación de Enter del escáner, se interpreta como código de producto y se inserta automáticamente al carrito.
-
-### C) Eliminación de Popups e Interrupciones
-- **Prohibición**: Quedan prohibidos los popups de alerta que requieran hacer clic en "Aceptar" para confirmar acciones normales.
-- **Alternativa**: Utilizar notificaciones tipo "Toast" auto-desvanecibles en las esquinas de la pantalla para confirmar acciones exitosas (ej. *"Producto agregado"*).
-- **Confirmación única**: Solo se solicitará confirmación modal para acciones destructivas del flujo (cancelar una venta en curso o cerrar el turno de caja).
-
----
-
-## 10. Lo que CajaFácil NO hará (Anti-patrones de Diseño)
+## 17. Lo que CajaFácil NO hará (Anti-patrones de Diseño)
 
 Para mantener la filosofía del producto intacta, el POS de CajaFácil evitará expresamente las siguientes prácticas:
 
@@ -468,7 +481,7 @@ Para mantener la filosofía del producto intacta, el POS de CajaFácil evitará 
 
 ---
 
-## 11. Configuración por Tipo de Negocio (Matriz de Variabilidad)
+## 18. Configuración por Tipo de Negocio (Matriz de Variabilidad)
 
 CajaFácil es un único producto de software que se adapta a diferentes tipos de comercio minorista a través de perfiles de configuración iniciales, sin alterar el Core 1.0.
 

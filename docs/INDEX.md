@@ -28,6 +28,7 @@ docs/
 │   ├── 03_DICCIONARIO_DEL_NEGOCIO.md    # Glosario y lenguaje ubicuo
 │   ├── 06_REGLAS_DE_NEGOCIO.md          # Listado canonical de reglas (RN-XXX)
 │   ├── 55_ANALISIS_FUNCIONAL_OPERACION_DIARIA.md # Capacidad de Operación Diaria (POS)
+│   ├── 56_DESIGN_SYSTEM.md              # Sistema de Diseño Visual y de Interacción (UX/UI)
 │   └── dominios/                        # Bounded Contexts y reglas funcionales específicas:
 │       ├── 04_DOMINIO_PRODUCTO.md
 │       ├── 07_DOMINIO_INVENTARIO.md
