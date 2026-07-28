@@ -8,7 +8,7 @@ from app.modules.venta.domain.entities.venta import Venta
 from app.modules.venta.domain.repositories.venta_repository import VentaRepository
 from app.modules.venta.domain.exceptions import VentaNotFoundException
 from app.modules.venta.domain.events.venta_events import VentaAnulada
-from app.modules.venta.application.event_dispatcher import EventDispatcher
+from app.common.event_dispatcher import EventDispatcher
 
 @dataclass(frozen=True)
 class AnularVentaCommand:

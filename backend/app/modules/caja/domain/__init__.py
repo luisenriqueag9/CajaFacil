@@ -1,1 +1,1 @@
-# Domain package init
+# Caja Domain Layer

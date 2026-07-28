@@ -31,7 +31,7 @@ from app.modules.venta.application.use_cases import (
 from app.modules.venta.application.ports.product_lookup import ProductLookup
 from app.modules.venta.application.ports.box_lookup import BoxLookup
 from app.modules.venta.application.ports.credit_lookup import CreditLookup
-from app.modules.venta.application.event_dispatcher import EventDispatcher
+from app.common.event_dispatcher import EventDispatcher
 from app.modules.venta.domain.events.venta_events import VentaConfirmada, VentaAnulada
 
 # ==========================================
@@ -439,21 +439,59 @@ def test_unit_of_work_transactional_rollback():
     TestingSessionLocal = sessionmaker(bind=engine)
     db_session = TestingSessionLocal()
 
+    company_id = uuid.uuid4()
+    box_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+    product_id = uuid.uuid4()
+
+    # Prepopulate database tables for Caja/Session integration:
+    from app.modules.company.data.models import Company
+    from app.modules.caja.infrastructure.persistence.models.caja_model import Caja, SesionCaja
+    
+    db_session.add(Company(
+        id=company_id,
+        business_name="Test Company",
+        trade_name="Test Company",
+        tax_id="123-456",
+        email="test@company.com",
+        currency="NIO",
+        timezone="UTC",
+        status="ACTIVE"
+    ))
+    db_session.add(Caja(
+        id=box_id,
+        company_id=company_id,
+        name="Main Box",
+        status="ACTIVA",
+        created_at=datetime.now(timezone.utc)
+    ))
+    db_session.add(SesionCaja(
+        id=uuid.uuid4(),
+        caja_id=box_id,
+        company_id=company_id,
+        user_id=user_id,
+        status="ABIERTA",
+        opening_balance=Decimal("1000.00"),
+        opened_at=datetime.now(timezone.utc)
+    ))
+    db_session.commit()
+
     try:
         from app.modules.venta.data.repositories.venta_repository_impl import VentaRepositoryImpl
-        from app.modules.venta.data.repositories.mock_repositories import (
-            MockMovimientoInventarioRepositoryImpl,
-            MockMovimientoCajaRepositoryImpl,
-            MockCreditoRepositoryImpl
+        from app.modules.venta.presentation.dependencies.venta_dependencies import (
+            MovimientoCajaRepositoryAdapter,
+            CreditoRepositoryAdapter
         )
+        from app.modules.inventario.data.repositories.venta_inventario_repository_adapter import VentaInventoryRepositoryAdapter
         from app.modules.venta.application.handlers.venta_confirmada_handlers import VentaEventHandler
-        from app.modules.venta.data.models import Venta as DBVenta, DBMovimientoInventario
+        from app.modules.venta.data.models import Venta as DBVenta
+        from app.modules.inventario.data.models import MovimientoInventario as DBMovimientoInventario
 
         # 2. Setup concrete infrastructure dependencies using the testing DB session
         venta_repo = VentaRepositoryImpl(db_session)
-        inv_repo = MockMovimientoInventarioRepositoryImpl(db_session)
-        caja_repo = MockMovimientoCajaRepositoryImpl(db_session)
-        cred_repo = MockCreditoRepositoryImpl(db_session)
+        inv_repo = VentaInventoryRepositoryAdapter(db_session)
+        caja_repo = MovimientoCajaRepositoryAdapter(db_session)
+        cred_repo = CreditoRepositoryAdapter(db_session)
 
         # 3. Setup dispatcher and subscribe handler
         dispatcher = EventDispatcher()
@@ -477,11 +515,6 @@ def test_unit_of_work_transactional_rollback():
             box_lookup=DirectBoxLookup(),
             credit_lookup=DirectCreditLookup()
         )
-
-        company_id = uuid.uuid4()
-        box_id = uuid.uuid4()
-        user_id = uuid.uuid4()
-        product_id = uuid.uuid4()
 
         command = ConfirmarVentaCommand(
             company_id=company_id,

@@ -13,7 +13,7 @@ from app.modules.venta.domain.exceptions import CajaCerradaException, ClienteReq
 from app.modules.venta.application.ports.product_lookup import ProductLookup
 from app.modules.venta.application.ports.box_lookup import BoxLookup
 from app.modules.venta.application.ports.credit_lookup import CreditLookup
-from app.modules.venta.application.event_dispatcher import EventDispatcher
+from app.common.event_dispatcher import EventDispatcher
 
 @dataclass(frozen=True)
 class DetalleVentaCommand:

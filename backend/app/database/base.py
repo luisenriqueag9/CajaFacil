@@ -17,9 +17,13 @@ from app.modules.category.data.models import Category  # noqa: F401
 from app.modules.company.data.models import Company  # noqa: F401
 from app.modules.brand.data.models import Brand  # noqa: F401
 from app.modules.supplier.data.models import Supplier  # noqa: F401
-from app.modules.purchase.data.models import Purchase, PurchaseDetail  # noqa: F401
-from app.modules.venta.data.models import Venta, VentaDetail, VentaPayment, DBMovimientoInventario, DBMovimientoCaja, DBCredito  # noqa: F401
+from app.modules.compra.data.models import Compra, DetalleCompra  # noqa: F401
+from app.modules.venta.data.models import Venta, VentaDetail, VentaPayment  # noqa: F401
 from app.modules.inventario.data.models import MovimientoInventario as RealMovimiento, Merma as RealMerma, AjusteInventario as RealAjuste, ExistenciaProducto as RealExistenciaProducto  # noqa: F401
-from app.modules.caja.data.models import Caja as RealCaja, MovimientoCaja as RealMovimientoCaja, ArqueoCaja as RealArqueoCaja  # noqa: F401
+from app.modules.caja.infrastructure.persistence.models.caja_model import Caja as RealCaja, SesionCaja as RealSesionCaja, MovimientoCaja as RealMovimientoCaja, ArqueoCaja as RealArqueoCaja  # noqa: F401
 from app.modules.tributacion.data.models import ConfiguracionTributaria as RealConfigTributaria, TasaImpuesto as RealTasaImpuesto  # noqa: F401
+from app.modules.cliente.infrastructure.persistence.models.cliente_model import Cliente as RealCliente  # noqa: F401
+from app.modules.credito.infrastructure.persistence.models.credito_model import Credito as RealCredito  # noqa: F401
+
+
 

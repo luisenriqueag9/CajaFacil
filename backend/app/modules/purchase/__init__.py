@@ -1,1 +1,0 @@
-# Purchase Domain Module package

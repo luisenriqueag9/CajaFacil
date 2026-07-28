@@ -11,7 +11,7 @@ from app.modules.venta.data.repositories.venta_repository_impl import VentaRepos
 from app.modules.venta.application.ports.product_lookup import ProductLookup
 from app.modules.venta.application.ports.box_lookup import BoxLookup
 from app.modules.venta.application.ports.credit_lookup import CreditLookup
-from app.modules.venta.application.event_dispatcher import EventDispatcher
+from app.common.event_dispatcher import EventDispatcher
 
 from app.modules.product.data.models import Product as DBProduct
 
@@ -51,11 +51,21 @@ class BoxLookupImpl(BoxLookup):
 
 class CreditLookupImpl(CreditLookup):
     """
-    Stub lookup for Client Credit Line since Credit module is not yet implemented.
-    Always returns True for valid credit limit requests.
+    Look up client credit line using CreditoRepository interface.
     """
+    def __init__(self, credit_repository):
+        self.credit_repository = credit_repository
+
     def has_active_credit_and_limit(self, company_id: UUID, client_id: UUID, required_amount: Decimal) -> bool:
-        return True
+        credit = self.credit_repository.get_by_client_id(company_id, client_id)
+        if not credit:
+            return False
+            
+        if credit.status.valor != "ACTIVO":
+            return False
+            
+        available = credit.credit_limit.monto - credit.balance.monto
+        return available >= required_amount
 
 
 def get_venta_repository(db: Session = Depends(get_db)) -> VentaRepository:
@@ -67,8 +77,72 @@ def get_product_lookup(db: Session = Depends(get_db)) -> ProductLookup:
 def get_box_lookup() -> BoxLookup:
     return BoxLookupImpl()
 
-def get_credit_lookup() -> CreditLookup:
-    return CreditLookupImpl()
+def get_credit_lookup(db: Session = Depends(get_db)) -> CreditLookup:
+    from app.modules.credito.infrastructure.persistence.repositories.credito_repository_impl import CreditoRepositoryImpl
+    repo = CreditoRepositoryImpl(db)
+    return CreditLookupImpl(repo)
+
+from app.modules.venta.application.ports.movimiento_inventario_repository import MovimientoInventarioRepository
+from app.modules.venta.application.ports.movimiento_caja_repository import MovimientoCajaRepository
+from app.modules.venta.application.ports.credito_repository import CreditoRepository
+
+class MovimientoCajaRepositoryAdapter(MovimientoCajaRepository):
+    def __init__(self, db: Session):
+        self.db = db
+
+    def registrar_movimiento(
+        self,
+        company_id: UUID,
+        box_id: UUID,
+        user_id: UUID,
+        amount: Decimal,
+        tipo: str,
+        concept: str,
+        reference_id: UUID
+    ) -> None:
+        from app.modules.caja.infrastructure.persistence.repositories.sesion_caja_repository_impl import SesionCajaRepositoryImpl
+        repo = SesionCajaRepositoryImpl(self.db)
+        
+        sesion = repo.get_active_by_caja(company_id, box_id)
+        if not sesion:
+            from app.modules.caja.domain.exceptions import CajaNoAbiertaException
+            raise CajaNoAbiertaException(box_id)
+            
+        import uuid
+        from datetime import datetime, timezone
+        sesion.registrar_movimiento(
+            id=uuid.uuid4(),
+            type=tipo,
+            amount=amount,
+            payment_method="EFECTIVO",
+            concept=concept,
+            origin_context="Ventas",
+            origin_document_id=reference_id,
+            timestamp=datetime.now(timezone.utc)
+        )
+        repo.update(sesion)
+
+class CreditoRepositoryAdapter(CreditoRepository):
+    def __init__(self, db: Session):
+        self.db = db
+
+    def registrar_deuda(
+        self,
+        company_id: UUID,
+        client_id: UUID,
+        amount: Decimal,
+        reference_id: UUID
+    ) -> None:
+        pass
+
+    def reversar_deuda(
+        self,
+        company_id: UUID,
+        client_id: UUID,
+        amount: Decimal,
+        reference_id: UUID
+    ) -> None:
+        pass
 
 def get_event_dispatcher(db: Session = Depends(get_db)) -> EventDispatcher:
     """
@@ -76,18 +150,14 @@ def get_event_dispatcher(db: Session = Depends(get_db)) -> EventDispatcher:
     the current request database Session. This guarantees that all handler operations
     participate sychronously within the exact same database transaction.
     """
-    from app.modules.venta.data.repositories.mock_repositories import (
-        MockMovimientoInventarioRepositoryImpl,
-        MockMovimientoCajaRepositoryImpl,
-        MockCreditoRepositoryImpl
-    )
     from app.modules.venta.application.handlers.venta_confirmada_handlers import VentaEventHandler
     from app.modules.venta.domain.events.venta_events import VentaConfirmada, VentaAnulada
 
-    # 1. Instantiate repositories utilizing the current request database session
-    inv_repo = MockMovimientoInventarioRepositoryImpl(db)
-    caja_repo = MockMovimientoCajaRepositoryImpl(db)
-    cred_repo = MockCreditoRepositoryImpl(db)
+    # 1. Instantiate adapters utilizing the current request database session
+    from app.modules.inventario.data.repositories.venta_inventario_repository_adapter import VentaInventoryRepositoryAdapter
+    inv_repo = VentaInventoryRepositoryAdapter(db)
+    caja_repo = MovimientoCajaRepositoryAdapter(db)
+    cred_repo = CreditoRepositoryAdapter(db)
 
     # 2. Instantiate handlers
     handler = VentaEventHandler(inv_repo, caja_repo, cred_repo)

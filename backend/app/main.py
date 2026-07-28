@@ -11,11 +11,13 @@ from app.modules.company.presentation.routers.company_router import router as co
 from app.modules.brand.presentation.routers.brand_router import router as brand_router
 from app.modules.category.presentation.routers.category_router import router as category_router
 from app.modules.supplier.presentation.routers.supplier_router import router as supplier_router
-from app.modules.purchase.presentation.routers.purchase_router import router as purchase_router
+from app.modules.compra.presentation.routers.compra_router import router as compra_router
 from app.modules.venta.presentation.routers.venta_router import router as venta_router
 from app.modules.inventario.presentation.routers.inventario_router import router as inventario_router
-from app.modules.caja.presentation.routers.caja_router import router as caja_router
+from app.modules.caja.presentation.api.routers.caja_router import router as caja_router
 from app.modules.tributacion.presentation.routers.tributacion_router import router as tributacion_router
+from app.modules.cliente.presentation.api.routers.cliente_router import router as cliente_router
+from app.modules.credito.presentation.api.routers.credito_router import router as credito_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -87,8 +89,8 @@ async def health_check():
 
 app.include_router(
     company_router,
-    prefix="/api/v1/companies",
-    tags=["Companies"],
+    prefix="/api/v1/empresas",
+    tags=["Empresas"],
 )
 
 app.include_router(
@@ -110,9 +112,9 @@ app.include_router(
 )
 
 app.include_router(
-    purchase_router,
-    prefix="/api/v1/purchases",
-    tags=["Purchases"],
+    compra_router,
+    prefix="/api/v1/compras",
+    tags=["Compras"],
 )
 
 app.include_router(
@@ -129,14 +131,26 @@ app.include_router(
 
 app.include_router(
     caja_router,
-    prefix="/api/v1/cash",
-    tags=["Cash"],
+    prefix="/api/v1/cajas",
+    tags=["Cajas"],
 )
 
 app.include_router(
     tributacion_router,
-    prefix="/api/v1/taxes",
-    tags=["Taxes"],
+    prefix="/api/v1/tributacion",
+    tags=["Tributacion"],
+)
+
+app.include_router(
+    cliente_router,
+    prefix="/api/v1/clientes",
+    tags=["Clientes"],
+)
+
+app.include_router(
+    credito_router,
+    prefix="/api/v1/creditos",
+    tags=["Créditos"],
 )
 # Note: Register modular routers here
 # Example:
