@@ -31,6 +31,7 @@ Esta carpeta es el repositorio central del conocimiento comercial y operativo de
 *   `55_ANALISIS_FUNCIONAL_OPERACION_DIARIA.md` (CF-DOC-055): Análisis funcional de la capacidad Operación Diaria (flujo completo del POS).
 *   `56_DESIGN_SYSTEM.md` (CF-DOC-056): Especificación oficial del Design System (colores, fuentes, componentes, tokens).
 *   `57_ARQUITECTURA_UX_POS.md` (CF-DOC-057): Especificación oficial de la Arquitectura UX y Flujos de Foco del POS.
+*   `58_WIREFRAME_FUNCIONAL_POS.md` (CF-DOC-058): Especificación oficial de la Distribución de Pantalla y Wireframe Funcional del POS.
 
 ## Documentos Relacionados
 *   Diseño técnico en `docs/engineering/architecture/`.
