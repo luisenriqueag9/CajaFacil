@@ -28,6 +28,7 @@ Esta carpeta es el repositorio central del conocimiento comercial y operativo de
 *   `27_DISENO_DOMINIO_INVENTARIO.md` (CF-DOC-027): Diseño de lógica del dominio de inventario.
 *   `30_ANALISIS_FUNCIONAL_CAJA.md` (CF-DOC-030): Análisis funcional de arqueos, turnos y diferencias de efectivo.
 *   `31_DISENO_DOMINIO_CAJA.md` (CF-DOC-031): Diseño de lógica del dominio de caja registradora.
+*   `55_ANALISIS_FUNCIONAL_OPERACION_DIARIA.md` (CF-DOC-055): Análisis funcional de la capacidad Operación Diaria (flujo completo del POS).
 
 ## Documentos Relacionados
 *   Diseño técnico en `docs/engineering/architecture/`.

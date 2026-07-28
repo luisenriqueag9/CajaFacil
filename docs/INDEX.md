@@ -1,93 +1,106 @@
----
-id: CF-DOC-000
-title: "Índice Maestro de Documentación"
-owner: "cto"
-status: "approved"
-last_reviewed: 2026-07-24
-role: "canonical"
----
-
-# Índice Maestro de Documentación - CajaFácil
+# Índice Maestro de Documentación - CajaFácil Core 1.0
 
 Bienvenido al repositorio de conocimiento de **CajaFácil**. Este documento constituye el punto oficial de entrada y mapa general para desarrolladores, arquitectos y asistentes de Inteligencia Artificial (IA).
 
 ---
 
-## 1. Misión de la Documentación
-
-En CajaFácil, la documentación es tratada como un activo de software. Su propósito es describir con precisión las reglas del negocio, la arquitectura del sistema y las directrices de ingeniería, garantizando la consistencia y mantenibilidad del producto durante su ciclo de vida a 10 años.
+## 1. Propósito del Proyecto
+CajaFácil es un punto de venta (POS) SaaS comercial multi-tenant y multi-sucursal, diseñado con capacidades **Offline-First** para garantizar que los comercios operen de forma ininterrumpida ante fallas de red. Su núcleo está estructurado bajo **Domain-Driven Design (DDD) Táctico** y **Clean Architecture** para asegurar la mantenibilidad y escalabilidad del producto a largo plazo.
 
 ---
 
-## 2. Estructura y Categorías Principales
+## 2. Mapa Documental de Carpetas
 
-La documentación está organizada bajo una estructura híbrida de carpetas que divide el conocimiento de negocio de las especificaciones y estándares de ingeniería de software:
+La base de conocimiento está organizada bajo la siguiente topología estricta:
 
 ```text
 docs/
-├── INDEX.md                         # Este archivo: Entrada general
-├── PLAN_REORGANIZACION_DOCUMENTAL.md # Estrategia de gobernanza
-├── MAPA_DOCUMENTAL.md                 # Taxonomía e índices de dominio
-├── MATRIZ_DE_DOCUMENTOS.md            # Plan de transición de archivos
-├── REGLAS_DE_DOCUMENTACION.md         # Estándar y convenciones de redacción
-├── PLAN_MIGRACION_DOCUMENTAL.md       # Hoja de ruta para la ejecución
+├── INDEX.md                             # Este archivo: Entrada general
+├── MAPA_DOCUMENTAL.md                   # Taxonomía e índices de dominios
+├── MATRIZ_DE_DOCUMENTOS.md              # Plan y estado de migración de archivos
+├── PLAN_REORGANIZACION_DOCUMENTAL.md    # Estrategia de gobernanza documental
+├── PLAN_MIGRACION_DOCUMENTAL.md         # Fases de transición documental
+├── REGLAS_DE_DOCUMENTACION.md           # Estándar y convenciones de redacción
 │
-├── business/                          # [NEGOCIO Y PRODUCTO]
+├── business/                            # [NEGOCIO Y PRODUCTO]
+│   ├── 00_MANIFIESTO_CAJA_FACIL.md      # Visión y misión de CajaFácil
+│   ├── 01_ESPECIFICACION_FUNCIONAL_V1.md# Especificación general funcional
+│   ├── 03_DICCIONARIO_DEL_NEGOCIO.md    # Glosario y lenguaje ubicuo
+│   ├── 06_REGLAS_DE_NEGOCIO.md          # Listado canonical de reglas (RN-XXX)
+│   ├── 55_ANALISIS_FUNCIONAL_OPERACION_DIARIA.md # Capacidad de Operación Diaria (POS)
+│   └── dominios/                        # Bounded Contexts y reglas funcionales específicas:
+│       ├── 04_DOMINIO_PRODUCTO.md
+│       ├── 07_DOMINIO_INVENTARIO.md
+│       ├── 08_DOMINIO_COMPRAS.md
+│       ├── 09_DOMINIO_VENTAS.md
+│       ├── 10_DOMINIO_CAJA.md
+│       ├── 11_DOMINIO_CLIENTES_CREDITO.md
+│       ├── 12_DOMINIO_SEGURIDAD.md
+│       └── 13_DOMINIO_EMPRESA.md
 │
-├── engineering/                       # [INGENIERÍA DE SOFTWARE]
-│   ├── architecture/                  # Arquitectura macro y DDD
-│   ├── database/                      # Esquemas relacionales y físicos
-│   ├── standards/                     # Estándares de desarrollo y testing
-│   └── adr/                           # Architecture Decision Records
+├── engineering/                         # [INGENIERÍA Y DISEÑO TÉCNICO]
+│   ├── architecture/                    # Macro arquitectura y diagramas
+│   │   ├── 02_ARQUITECTURA_GENERAL.md
+│   │   ├── 05_MODELO_DEL_DOMINIO.md
+│   │   ├── 22_BACKEND_ARQUITECTURA.md
+│   │   └── 23_FRONTEND_ARQUITECTURA.md
+│   ├── database/                        # Diseños y modelos lógicos/físicos
+│   │   ├── 15_MODELO_CONCEPTUAL_DE_DATOS.md
+│   │   ├── 18_MODELO_LOGICO_COMPRAS.md
+│   │   ├── 20_MODELO_LOGICO_CLIENTES_CREDITO.md
+│   │   └── 21_DISENO_BASE_DE_DATOS.md
+│   └── standards/                       # Estándares obligatorios de codificación
+│       ├── 33_ESTANDAR_DE_IMPLEMENTACION.md
+│       ├── 34_ESTANDARES_DE_IMPLEMENTACION.md
+│       ├── 35_ESTANDARES_DDD.md
+│       ├── 36_ESTANDARES_TRANSACCIONALES.md
+│       ├── 37_ESTANDARES_OFFLINE_FIRST.md
+│       ├── 38_ESTANDARES_DE_PRUEBAS.md
+│       ├── 39_GUIA_DESARROLLO_CAJAFACIL.md
+│       └── 40_GUIA_IA_CAJAFACIL.md
 │
-├── reference/                         # [REFERENCIAS EXTERNAS]
-├── ai/                                # [ADAPTADOR PARA IA]
-├── templates/                         # [PLANTILLAS Y BLUEPRINTS]
-└── history/                           # [HISTORIAL Y SPRINTS CERRADOS]
+├── decisions/                           # [ARCHITECTURE DECISION RECORDS - ADR]
+│   ├── adr_001_sesion_caja_aggregate_root.md
+│   ├── adr_002_commonsqlalchemyunitofwork.md
+│   ├── adr_003_offline_first.md
+│   ├── adr_004_sqlite_postgresql.md
+│   └── adr_005_dominio_propietario_datos.md
+│
+├── ai/                                  # [ADAPTADOR Y DIRECTRICES PARA IA]
+│   └── ...
+│
+├── history/                             # [REPORTES DE CIERRE E SPRINTS COMPLETADOS]
+│   └── ...
+│
+└── archive/                             # [DOCUMENTACIÓN REEMPLAZADA / OBSOLETA]
+    └── ...
 ```
----
-
-## 3. Estado de la Reorganización (Control de Migración Parcial)
-
-El proyecto se encuentra en medio de un proceso de reorganización documental incremental por dominios funcionales. A continuación se detalla el estado oficial y la ubicación de la información para evitar confusiones de lectura:
-
-| Dominio Funcional | Estado | Ubicación Oficial del Conocimiento |
-| :--- | :---: | :--- |
-| **Empresa (Tenant) y Seguridad** | ✅ MIGRADO | `docs/business/13_DOMINIO_EMPRESA.md`, `docs/business/12_DOMINIO_SEGURIDAD.md` y `docs/engineering/database/16_MODELO_LOGICO_EMPRESA_SEGURIDAD.md`. |
-| **Producto (Catalog)** | ✅ MIGRADO | `docs/business/04_DOMINIO_PRODUCTO.md` y `docs/engineering/database/17_MODELO_LOGICO_PRODUCTOS_INVENTARIO.md`. |
-| **Ventas (Sales)** | ✅ MIGRADO | `docs/business/09_DOMINIO_VENTAS.md`, `docs/engineering/database/19_MODELO_LOGICO_VENTAS_CAJA.md` y `docs/engineering/architecture/24_DISENO_ARQUITECTONICO_VENTAS.md`. |
-| **Inventario (Stock)** | ✅ MIGRADO | `docs/business/07_DOMINIO_INVENTARIO.md`, `docs/engineering/database/17_MODELO_LOGICO_PRODUCTOS_INVENTARIO.md` y `docs/engineering/architecture/28_DISENO_ARQUITECTONICO_INVENTARIO.md`. |
-| **Caja (Cash Box)** | ✅ MIGRADO | `docs/business/10_DOMINIO_CAJA.md`, `docs/engineering/database/19_MODELO_LOGICO_VENTAS_CAJA.md` y `docs/engineering/architecture/32_DISENO_ARQUITECTONICO_CAJA.md`. |
-| **Configuración Tributaria** | 🔄 MIGRANDO | En proceso de traslado en la Fase 6 (ver matriz y plan de migración). |
-| **Clientes y Crédito** | ⏳ PENDIENTE | Ubicado en el directorio raíz de `docs/`. |
-| **Compras y Proveedores** | ✅ MIGRADO | `docs/business/08_DOMINIO_COMPRAS.md` y `docs/engineering/database/18_MODELO_LOGICO_COMPRAS.md`. |
-
----
-## 4. Navegación Temática Rápida
-
-Si deseas profundizar en un dominio de negocio específico, puedes seguir nuestros índices de dominio cruzados definidos en [MAPA_DOCUMENTAL.md](file:///docs/MAPA_DOCUMENTAL.md):
-*   **Ventas:** Reglas, base de datos y arquitectura del checkout de cobro.
-*   **Inventario:** Kardex, movimientos de stock y caché en terminales locales.
-*   **Configuración Tributaria:** Tasas de impuesto y motores impositivos.
-*   **Gestión de Existencias:** Auditoría física y balance de stock del inquilino (Tenant).
 
 ---
 
-## 5. Clasificación Numérica Oficial
+## 3. Guía de Inicio para Nuevos Desarrolladores
 
-Para preservar la trazabilidad histórica de los documentos y evitar roturas de enlaces relacionales en Git, CajaFácil adopta un **Glosario Numérico de Rangos** oficial:
-*   **`00 - 09`:** Reglas del Negocio y Manifiesto (Business Core).
-*   **`10 - 14`:** Diseño de Dominio y Arquitectura Conceptual.
-*   **`15 - 21`:** Modelos y Diseños de Persistencia (Base de Datos).
-*   **`22 - 39`:** Guías de Implementación y Estándares Técnicos.
-*   **`40 - 54`:** Especificaciones Funcionales por Módulo MVP.
-*   **`55 - 90`:** Reportes de Cierre de Sprint y Auditoría de Saneamiento.
-*   **`99`:** Guía y Adaptador de Contexto para Inteligencia Artificial.
+Para integrarse de forma efectiva al desarrollo de CajaFácil, siga el orden recomendado de lectura:
+
+### Paso 1: Comprender el Negocio
+*   Comience por el **[Manifiesto del Proyecto](file:///docs/business/00_MANIFIESTO_CAJA_FACIL.md)** para alinearse con los objetivos y filosofía del negocio.
+*   Estudie el **[Diccionario del Negocio](file:///docs/business/03_DICCIONARIO_DEL_NEGOCIO.md)** para dominar el Lenguaje Ubicuo obligatorio en el código.
+*   Revise las **[Reglas de Negocio](file:///docs/business/06_REGLAS_DE_NEGOCIO.md)** generales del sistema.
+
+### Paso 2: Entender la Arquitectura
+*   Lea la **[Arquitectura General](file:///docs/engineering/architecture/02_ARQUITECTURA_GENERAL.md)** para conocer las capas físicas y el flujo de dependencias.
+*   Estudie las decisiones críticas de diseño documentadas en la sección **[decisions/](file:///docs/decisions/)** (ADR).
+
+### Paso 3: Seguir los Estándares de Codificación
+*   Es obligatorio revisar el **[Estándar de Implementación / Constitución Técnica](file:///docs/engineering/standards/33_ESTANDAR_DE_IMPLEMENTACION.md)** y las pautas de estilo en **[Estándares Oficiales](file:///docs/engineering/standards/34_ESTANDARES_DE_IMPLEMENTACION.md)**.
+*   Asegure la correcta transaccionalidad revisando los **[Estándares Transaccionales](file:///docs/engineering/standards/36_ESTANDARES_TRANSACCIONALES.md)**.
+
+### Paso 4: Asegurar Calidad
+*   Toda modificación o adición de código debe incluir pruebas unitarias o de integración según se detalla en los **[Estándares de Pruebas](file:///docs/engineering/standards/38_ESTANDARES_DE_PRUEBAS.md)**.
 
 ---
 
-## 6. Cómo Utilizar y Mantener esta Documentación
+## 4. Gobernanza de la Documentación
 
-*   **Principio Canónico:** Cada concepto tiene una única fuente oficial. No dupliques contenido; usa enlaces directos de markdown.
-*   **Antes de Codificar:** Revisa siempre los estándares en `docs/engineering/standards/` y las reglas en `docs/business/`.
-*   **Actualización Obligatoria:** Si modificas el código de un módulo y esto altera su comportamiento arquitectónico o regla de negocio, debes actualizar el documento canónico en la misma rama (Pull Request) y actualizar la propiedad `last_reviewed` del Frontmatter.
+*   **Consistencia**: La documentación se trata como un activo de software.
+*   **Actualización**: Si modifica el comportamiento de un caso de uso o regla de negocio, es obligatorio actualizar el archivo correspondiente en el mismo Pull Request.

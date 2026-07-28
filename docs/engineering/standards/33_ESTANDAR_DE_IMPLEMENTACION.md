@@ -307,19 +307,19 @@ El caso de uso coordina la orquestación del negocio.
 2. Debe recibir parámetros de entrada mediante un objeto de tipo **Command** o **Query** (clase `@dataclass(frozen=True)`).
 3. Debe inyectar sus repositorios e integraciones (ports) a través de la interfaz abstracta (inversión de dependencias).
 4. El método principal de ejecución debe llamarse estrictamente `execute()`.
-5. Debe controlar la consistencia de la base de datos (Unit of Work) a través de transacciones SQLAlchemy (`db.begin_nested()`, `db.commit()`, `db.rollback()`), asegurando que la persistencia y la publicación de eventos locales se ejecuten atómicamente.
+5. Debe controlar la consistencia de la base de datos (Unit of Work) a través de la interfaz abstracta `UnitOfWork` (`with self.uow:`), asegurando que la persistencia y la publicación de eventos locales se ejecuten atómicamente.
 
 ### Ejemplo oficial:
 ```python
 from dataclasses import dataclass
 from uuid import UUID
-from sqlalchemy.orm import Session
 from app.modules.venta.domain.entities.venta import Venta
 from app.modules.venta.domain.repositories.venta_repository import VentaRepository
+from app.modules.venta.application.ports.unit_of_work import UnitOfWork
 from app.modules.venta.application.ports.product_lookup import ProductLookup
 
 @dataclass(frozen=True)
-def ConfirmarVentaCommand:
+class ConfirmarVentaCommand:
     company_id: UUID
     box_id: UUID
     user_id: UUID
@@ -328,11 +328,11 @@ class ConfirmarVentaUseCase:
     def __init__(
         self,
         repository: VentaRepository,
-        db: Session,
+        uow: UnitOfWork,
         product_lookup: ProductLookup
     ):
         self.repository = repository
-        self.db = db
+        self.uow = uow
         self.product_lookup = product_lookup
 
     def execute(self, command: ConfirmarVentaCommand) -> Venta:
@@ -344,14 +344,9 @@ class ConfirmarVentaUseCase:
         venta = Venta(id=..., company_id=command.company_id, ...)
 
         # Persist within a secure transaction
-        try:
-            with self.db.begin_nested():
-                saved_venta = self.repository.save(venta)
-            self.db.commit()
-            return saved_venta
-        except Exception as e:
-            self.db.rollback()
-            raise e
+        with self.uow:
+            saved_venta = self.repository.save(venta)
+        return saved_venta
 ```
 
 ---

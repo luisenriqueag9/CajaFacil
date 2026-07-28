@@ -37,11 +37,10 @@ Todo caso de uso mutador en la aplicación debe ejecutar las fases en este orden
 
 1. **Fase de Validación Preliminar:** Recuperación de entidades y chequeo de invariantes lógicas (ej: validar que la caja esté abierta).
 2. **Fase de Mutación:** Modificación del Aggregate Root o agregado de registros en memoria.
-3. **Fase de Apertura de Transacción:** Iniciar bloque con `begin_nested()`.
-4. **Fase de Persistencia Parcial:** Guardar en repositorio (ejecuta `flush()` internamente).
-5. **Fase de Despacho de Eventos:** Lanzar los eventos a los subscriptores locales síncronos. Si un event handler falla, lanzará una excepción que aborta el bloque.
-6. **Fase de Confirmación:** Ejecutar `db.commit()`.
-7. **Fase de Manejo de Excepciones:** Ante cualquier error en los pasos 3 a 6, se captura, se ejecuta `db.rollback()` y se propaga el error al cliente.
+3. **Fase de Apertura de Transacción:** Iniciar bloque utilizando el Unit of Work (`with self.uow:`).
+4. **Fase de Persistencia Parcial:** Guardar en repositorio (el repositorio ejecuta `flush()` internamente).
+5. **Fase de Despacho de Eventos:** Lanzar los eventos a los subscriptores locales síncronos dentro del bloque de UoW.
+6. **Fase de Confirmación:** Confirmación implícita al salir exitosamente del bloque `with self.uow:`.
 
 ### Ejemplo de Referencia (Homologado):
 ```python
@@ -55,25 +54,19 @@ def execute(self, command: RegistrarMovimientoCommand) -> MovimientoInventario:
     movimiento = MovimientoInventario(...)
 
     # 3. Transacción (Unit of Work)
-    try:
-        with self.db.begin_nested():
-            # A. Guardado (solo flush)
-            saved_mov = self.repository.save(movimiento)
-            
-            # B. Dispatching de eventos
-            event = InventarioActualizado(
-                product_id=saved_mov.product_id,
-                new_balance=calculated_balance,
-                occurred_at=saved_mov.created_at
-            )
-            self.event_dispatcher.dispatch(event)
-            
-        # C. Commit final
-        self.db.commit()
-        return saved_mov
-    except Exception as e:
-        self.db.rollback()
-        raise e
+    with self.uow:
+        # A. Guardado (solo flush en repo)
+        saved_mov = self.repository.save(movimiento)
+        
+        # B. Dispatching de eventos
+        event = InventarioActualizado(
+            product_id=saved_mov.product_id,
+            new_balance=calculated_balance,
+            occurred_at=saved_mov.created_at
+        )
+        self.event_dispatcher.dispatch(event)
+        
+    return saved_mov
 ```
 
 ---

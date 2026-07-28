@@ -38,30 +38,26 @@ Administrar la información de los clientes y el ciclo de vida de los créditos 
 
 ## Cliente
 
-Representa a una persona o empresa con la que existe una relación comercial.
+Representa a una persona o empresa con la que existe una relacion comercial.
 
-## Crédito
+## Credito
 
-Representa una obligación de pago generada por una venta a crédito.
+Representa la linea o cuenta de credito otorgada a un cliente.
 
 ---
 
 # Entidades
 
 - Cliente
-- Crédito
-- AbonoCredito
-- EstadoCredito
+- Credito
 
 ---
 
 # Value Objects
 
-- Saldo
-- LímiteCrédito
-- FechaVencimiento
-- Plazo
-- NúmeroDocumento
+- Dinero (Saldo, LimiteCredito)
+- EstadoCredito
+- EstadoCliente
 
 ---
 
@@ -81,23 +77,25 @@ Representa una obligación de pago generada por una venta a crédito.
 
 ## Cliente
 
-- Activo
-- Inactivo
+- ACTIVO
+- INACTIVO
 
-## Crédito
+## Credito
 
-- Activo
-- Cancelado
-- Vencido
+- ACTIVO
+- SUSPENDIDO
 
 ---
 
 # Eventos del Dominio
 
 - ClienteRegistrado
-- CreditoCreado
-- AbonoRegistrado
-- CreditoLiquidado
+- ClienteActualizado
+- ClienteInactivado
+- CuentaCreditoAbierta
+- LimiteCreditoActualizado
+- DeudaRegistrada
+- DeudaReversada
 
 ---
 
