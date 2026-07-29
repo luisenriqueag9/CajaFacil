@@ -11,6 +11,7 @@ import 'favorites_panel_placeholder.dart';
 import 'totals_panel_placeholder.dart';
 import 'quick_actions_bar.dart';
 import 'product_search_overlay.dart';
+import 'edit_cart_item_dialog.dart';
 
 /// PosShell: Componente estructural interactivo del POS con búsqueda inteligente.
 ///
@@ -136,6 +137,26 @@ class _PosShellState extends State<PosShell> {
     });
   }
 
+  // Abre el diálogo para editar la línea del carrito
+  void _editCartItem(int index) async {
+    if (index < 0 || index >= _cartItems.length) return;
+
+    final currentItem = _cartItems[index];
+    final updatedItem = await showDialog<CartItem>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => EditCartItemDialog(item: currentItem),
+    );
+
+    if (updatedItem != null) {
+      setState(() {
+        _cartItems[index] = updatedItem;
+        _selectedIndex = index;
+      });
+    }
+    _requestFocus();
+  }
+
   // Elimina la fila del carrito seleccionada
   void _deleteSelectedRow() {
     if (_selectedIndex != null && _selectedIndex! >= 0 && _selectedIndex! < _cartItems.length) {
@@ -166,6 +187,9 @@ class _PosShellState extends State<PosShell> {
     if (_suggestions.isNotEmpty && _highlightedSuggestionIndex != null) {
       // Agregar sugerencia resaltada
       _addProduct(_suggestions[_highlightedSuggestionIndex!].code);
+    } else if (query.trim().isEmpty && _selectedIndex != null) {
+      // Abrir edición si la búsqueda está vacía y hay una fila seleccionada
+      _editCartItem(_selectedIndex!);
     } else {
       // Comportamiento por defecto
       _addProduct(query);
@@ -198,6 +222,11 @@ class _PosShellState extends State<PosShell> {
             return KeyEventResult.handled;
           } else if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.numpadEnter) {
             _handleEnterKey();
+            return KeyEventResult.handled;
+          } else if (key == LogicalKeyboardKey.f4) {
+            if (_selectedIndex != null) {
+              _editCartItem(_selectedIndex!);
+            }
             return KeyEventResult.handled;
           }
         }
@@ -254,6 +283,7 @@ class _PosShellState extends State<PosShell> {
                                     _selectedIndex = index;
                                   });
                                 },
+                                onRowDoubleTap: _editCartItem,
                               ),
                             ),
                             const SizedBox(width: AppSpacing.m),

@@ -21,6 +21,7 @@ class QuickActionsBar extends StatelessWidget {
       {'key': 'ESC', 'desc': 'Cancelar selección'},
       {'key': 'F2', 'desc': 'Cliente'},
       {'key': 'F3', 'desc': 'Consulta'},
+      {'key': 'F4', 'desc': 'Editar Línea'},
       {'key': 'F6', 'desc': 'Suspender'},
       {'key': 'F7', 'desc': 'Recuperar'},
       {'key': 'F12', 'desc': 'Cobrar'},

@@ -28,12 +28,14 @@ class CFDataTable extends StatelessWidget {
     required this.rows,
     this.selectedIndex,
     this.onRowSelected,
+    this.onRowDoubleTap,
   });
 
   final List<CFDataColumn> columns;
   final List<List<Widget>> rows;
   final int? selectedIndex;
   final ValueChanged<int>? onRowSelected;
+  final ValueChanged<int>? onRowDoubleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +111,7 @@ class CFDataTable extends StatelessWidget {
                   verticalAlignment: TableCellVerticalAlignment.middle,
                   child: InkWell(
                     onTap: onRowSelected != null ? () => onRowSelected!(rowIndex) : null,
+                    onDoubleTap: onRowDoubleTap != null ? () => onRowDoubleTap!(rowIndex) : null,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppSpacing.s,

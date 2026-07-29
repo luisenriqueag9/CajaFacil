@@ -19,11 +19,13 @@ class SaleGridPlaceholder extends StatelessWidget {
     required this.cartItems,
     this.selectedIndex,
     this.onRowSelected,
+    this.onRowDoubleTap,
   });
 
   final List<CartItem> cartItems;
   final int? selectedIndex;
   final ValueChanged<int>? onRowSelected;
+  final ValueChanged<int>? onRowDoubleTap;
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +82,7 @@ class SaleGridPlaceholder extends StatelessWidget {
             rows: tableRows,
             selectedIndex: selectedIndex,
             onRowSelected: onRowSelected,
+            onRowDoubleTap: onRowDoubleTap,
           ),
 
           // Si el carrito está vacío, mostramos el empty state

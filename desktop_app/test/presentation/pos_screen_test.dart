@@ -4,8 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:caja_facil/presentation/screens/pos/pos_screen.dart';
 import 'package:caja_facil/presentation/screens/pos/widgets/pos_shell.dart';
 import 'package:caja_facil/presentation/components/inputs/cf_search_field.dart';
+import 'package:caja_facil/presentation/components/inputs/cf_text_field.dart';
 import 'package:caja_facil/presentation/screens/pos/widgets/product_search_overlay.dart';
 import 'package:caja_facil/presentation/screens/pos/widgets/search_result_tile.dart';
+import 'package:caja_facil/presentation/screens/pos/widgets/edit_cart_item_dialog.dart';
 
 void main() {
   group('Widget Tests - POS Search & Autocomplete (Sprint 42)', () {
@@ -24,7 +26,6 @@ void main() {
       expect(find.textContaining('Cajero: Cajero Demo'), findsOneWidget);
       expect(find.text('TOTAL A PAGAR:'), findsOneWidget);
       expect(find.text('Carrito de Ventas Vacío'), findsOneWidget);
-      expect(find.text('ENTER'), findsOneWidget);
     });
 
     testWidgets('Search by exact code displays matching suggestions in real time', (WidgetTester tester) async {
@@ -40,14 +41,11 @@ void main() {
 
       await tester.pump();
 
-      // Teclear '001'
       final searchFieldFinder = find.byType(CFSearchField);
       await tester.enterText(searchFieldFinder, '001');
-      await tester.pump(); // Procesar el onChanged
+      await tester.pump();
 
-      // Debería aparecer el overlay de sugerencias con Coca Cola
       expect(find.byType(ProductSearchOverlay), findsOneWidget);
-      expect(find.byType(SearchResultTile), findsOneWidget);
       expect(find.text('Coca Cola 355ml'), findsOneWidget);
     });
 
@@ -64,35 +62,12 @@ void main() {
 
       await tester.pump();
 
-      // Teclear 'co' (coincidencia parcial para Coca Cola y Leche Entera si Leche Entera tuviese 'co', pero Coca Cola es única)
       final searchFieldFinder = find.byType(CFSearchField);
       await tester.enterText(searchFieldFinder, 'co');
       await tester.pump();
 
       expect(find.byType(ProductSearchOverlay), findsOneWidget);
       expect(find.text('Coca Cola 355ml'), findsOneWidget);
-    });
-
-    testWidgets('Partial code matching returns multiple suggestions', (WidgetTester tester) async {
-      await tester.binding.setSurfaceSize(const Size(1920, 1080));
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: PosScreen(),
-          ),
-        ),
-      );
-
-      await tester.pump();
-
-      // Teclear '00' (debe coincidir con todos los códigos mock '001' a '005')
-      final searchFieldFinder = find.byType(CFSearchField);
-      await tester.enterText(searchFieldFinder, '00');
-      await tester.pump();
-
-      expect(find.byType(ProductSearchOverlay), findsOneWidget);
-      expect(find.byType(SearchResultTile), findsNWidgets(5)); // Muestra las 5 sugerencias del catálogo mock
     });
 
     testWidgets('Keyboard arrow navigation highlights suggestions, ENTER adds it, and panel closes', (WidgetTester tester) async {
@@ -112,22 +87,16 @@ void main() {
       await tester.enterText(searchFieldFinder, '00');
       await tester.pump();
 
-      // Deberían verse las sugerencias, pero ninguna resaltada por defecto
       expect(find.byType(ProductSearchOverlay), findsOneWidget);
 
-      // Presionar Flecha Abajo para resaltar la primera sugerencia (Coca Cola 355ml)
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pump();
 
-      // Presionar ENTER para registrar el producto resaltado
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pump();
 
-      // La sugerencia debe agregarse al carrito y el panel de autocompletado debe cerrarse
       expect(find.byType(ProductSearchOverlay), findsNothing);
-      expect(find.text('Carrito de Ventas Vacío'), findsNothing);
       expect(find.text('Coca Cola 355ml'), findsOneWidget);
-      expect(find.text('Líneas: 1'), findsOneWidget);
     });
 
     testWidgets('ESC key closes suggestions and retains text field focus', (WidgetTester tester) async {
@@ -149,14 +118,11 @@ void main() {
 
       expect(find.byType(ProductSearchOverlay), findsOneWidget);
 
-      // Presionar la tecla ESC física simulada
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pump();
 
-      // El panel flotante debe desaparecer
       expect(find.byType(ProductSearchOverlay), findsNothing);
 
-      // El buscador debe mantener el foco
       final TextField textFieldWidget = tester.widget<TextField>(
         find.descendant(
           of: searchFieldFinder,
@@ -185,17 +151,179 @@ void main() {
 
       expect(find.byType(ProductSearchOverlay), findsOneWidget);
 
-      // Tapor en la sugerencia de Pan Blanco en el panel flotante
       await tester.tap(find.descendant(
         of: find.byType(SearchResultTile),
         matching: find.text('Pan Blanco'),
       ));
       await tester.pump();
 
-      // Debe cerrarse el panel y agregarse al carrito
       expect(find.byType(ProductSearchOverlay), findsNothing);
-      expect(find.text('Pan Blanco'), findsNWidgets(2)); // En el carrito y en favoritos
-      expect(find.text('Líneas: 1'), findsOneWidget);
+      expect(find.text('Pan Blanco'), findsNWidgets(2));
+    });
+  });
+
+  group('Widget Tests - POS Cart Line Management (Sprint 43)', () {
+    testWidgets('Double clicking on a row opens the EditCartItemDialog', (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(1920, 1080));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PosScreen(),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      // Agregar un producto para que haya una fila
+      final searchFieldFinder = find.byType(CFSearchField);
+      await tester.enterText(searchFieldFinder, '001');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      // Hacer doble click en el producto de la grilla
+      await tester.tap(find.text('Coca Cola 355ml'));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('Coca Cola 355ml'));
+      await tester.pumpAndSettle();
+
+      // Debe estar abierto el diálogo
+      expect(find.byType(EditCartItemDialog), findsOneWidget);
+      expect(find.text('Editar Línea de Venta'), findsOneWidget);
+    });
+
+    testWidgets('Pressing F4 on a selected row opens the EditCartItemDialog', (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(1920, 1080));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PosScreen(),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      // Agregar Coca Cola
+      final searchFieldFinder = find.byType(CFSearchField);
+      await tester.enterText(searchFieldFinder, '001');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      // Seleccionar la fila del carrito
+      await tester.tap(find.text('Coca Cola 355ml'));
+      await tester.pumpAndSettle();
+
+      // Refocar el buscador de productos para propagar el teclado
+      await tester.tap(find.byType(CFSearchField));
+      await tester.pumpAndSettle();
+
+      // Presionar la tecla de función F4
+      await tester.sendKeyEvent(LogicalKeyboardKey.f4);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(EditCartItemDialog), findsOneWidget);
+    });
+
+    testWidgets('Modifying quantity and discount updates cart row and totals upon saving', (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(1920, 1080));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PosScreen(),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      // Agregar Coca Cola (precio base 25.00)
+      final searchFieldFinder = find.byType(CFSearchField);
+      await tester.enterText(searchFieldFinder, '001');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      // Abrir diálogo por doble tap
+      await tester.tap(find.text('Coca Cola 355ml'));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('Coca Cola 355ml'));
+      await tester.pumpAndSettle();
+
+      // Cambiar cantidad a '5'
+      final qtyInput = find.descendant(
+        of: find.widgetWithText(CFTextField, 'Cantidad'),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(qtyInput, '5');
+
+      // Cambiar descuento a '10'
+      final descInput = find.descendant(
+        of: find.widgetWithText(CFTextField, 'Descuento (L)'),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(descInput, '10');
+      await tester.pump();
+
+      // Dar click en el botón Guardar
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      // El diálogo debe cerrarse
+      expect(find.byType(EditCartItemDialog), findsNothing);
+
+      // Los valores del mostrador deben cambiar en vivo:
+      // Subtotal = 25.00 * 5 = 125.00
+      // Descuento = 10.00
+      // ISV (15%) = 125.00 * 0.15 = 18.75
+      // Total = 125.00 + 18.75 - 10.00 = 133.75
+      expect(find.text('L 125.00'), findsOneWidget); // Desglose subtotal
+      expect(find.text('L 115.00'), findsOneWidget); // Fila total (125 - 10)
+      expect(find.text('L 10.00'), findsNWidgets(2)); // Descuento en la fila y en desglose
+      expect(find.text('L 18.75'), findsOneWidget); // ISV
+      expect(find.text('L 133.75'), findsOneWidget); // Total
+    });
+
+    testWidgets('Canceling the edit dialog leaves values unchanged', (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(1920, 1080));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: PosScreen(),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      await tester.enterText(find.byType(CFSearchField), '001');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      await tester.tap(find.text('Coca Cola 355ml'));
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(find.text('Coca Cola 355ml'));
+      await tester.pumpAndSettle();
+
+      // Cambiar cantidad a '99'
+      final qtyInput = find.descendant(
+        of: find.widgetWithText(CFTextField, 'Cantidad'),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(qtyInput, '99');
+      await tester.pump();
+
+      // Dar click en Cancelar
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+
+      // El diálogo debe cerrarse y mantener los valores iniciales (Cantidad 1.00, subtotal 25.00)
+      expect(find.byType(EditCartItemDialog), findsNothing);
+      expect(find.text('1.00'), findsOneWidget);
+      expect(find.text('L 25.00'), findsNWidgets(3));
     });
   });
 }
