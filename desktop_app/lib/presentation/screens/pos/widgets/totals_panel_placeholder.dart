@@ -5,20 +5,39 @@ import '../../../theme/app_text_styles.dart';
 import '../../../components/layout/cf_panel.dart';
 import '../../../components/buttons/cf_button.dart';
 
-/// TotalsPanelPlaceholder: Cuadro inferior de desglose e importe total de la venta.
+/// TotalsPanelPlaceholder: Cuadro inferior de desglose e importe total del POS.
 ///
 /// Propósito:
-/// - Presentar el total gigante a cobrar y desglose de impuestos/descuentos.
-/// - Ofrecer el botón de llamada a cobro F12/Checkout.
+/// - Presentar de forma clara los totales calculados acumulativos.
+/// - Ofrecer botones para suspender/recuperar/consultar y cobrar.
 class TotalsPanelPlaceholder extends StatelessWidget {
-  const TotalsPanelPlaceholder({super.key});
+  const TotalsPanelPlaceholder({
+    super.key,
+    required this.subtotal,
+    required this.tax,
+    required this.discount,
+    required this.total,
+    this.onCheckout,
+    this.onSuspend,
+    this.onResume,
+    this.onQuery,
+  });
+
+  final double subtotal;
+  final double tax;
+  final double discount;
+  final double total;
+  final VoidCallback? onCheckout;
+  final VoidCallback? onSuspend;
+  final VoidCallback? onResume;
+  final VoidCallback? onQuery;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Botones auxiliares de mostrador a la izquierda
+        // Acciones auxiliares a la izquierda
         Expanded(
           flex: 4,
           child: Row(
@@ -26,56 +45,56 @@ class TotalsPanelPlaceholder extends StatelessWidget {
               CFButton(
                 label: 'Suspender (F6)',
                 variant: ButtonVariant.outline,
-                onPressed: () {},
+                onPressed: onSuspend,
               ),
               const SizedBox(width: AppSpacing.xs),
               CFButton(
                 label: 'Recuperar (F7)',
                 variant: ButtonVariant.outline,
-                onPressed: () {},
+                onPressed: onResume,
               ),
               const SizedBox(width: AppSpacing.xs),
               CFButton(
                 label: 'Consultar (F3)',
                 variant: ButtonVariant.outline,
-                onPressed: () {},
+                onPressed: onQuery,
               ),
             ],
           ),
         ),
         const SizedBox(width: AppSpacing.m),
-        // Desglose de Totales y Botón Cobrar (Checkout)
+        // Desglose de importes y botón cobrar a la derecha
         Expanded(
           flex: 6,
           child: CFPanel(
-            color: AppColors.primary, // Fondo Slate Profundo
+            color: AppColors.primary,
             border: Border.all(color: Colors.transparent),
             padding: const EdgeInsets.all(AppSpacing.s),
             child: Row(
               children: [
-                // Impuestos y Descuentos desglosados
+                // Impuestos y Descuentos
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildRowDetail('SUBTOTAL:', 'L 0.00'),
+                      _buildRowDetail('SUBTOTAL:', 'L ${subtotal.toStringAsFixed(2)}'),
                       const SizedBox(height: 4.0),
-                      _buildRowDetail('ISV (15%):', 'L 0.00'),
+                      _buildRowDetail('ISV (15%):', 'L ${tax.toStringAsFixed(2)}'),
                       const SizedBox(height: 4.0),
-                      _buildRowDetail('DESCUENTOS:', 'L 0.00'),
+                      _buildRowDetail('DESCUENTOS:', 'L ${discount.toStringAsFixed(2)}'),
                     ],
                   ),
                 ),
                 const SizedBox(width: AppSpacing.m),
-                // Línea divisoria vertical
+                // Separador
                 Container(
                   width: 1.5,
                   height: 60.0,
                   color: Colors.white24,
                 ),
                 const SizedBox(width: AppSpacing.m),
-                // Total Gigante y Botón F12
+                // Total
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
@@ -86,11 +105,11 @@ class TotalsPanelPlaceholder extends StatelessWidget {
                         color: Colors.white70,
                       ),
                     ),
-                    const Text(
-                      'L 0.00',
-                      style: TextStyle(
+                    Text(
+                      'L ${total.toStringAsFixed(2)}',
+                      style: const TextStyle(
                         fontFamily: AppTextStyles.fontFamilyNumeric,
-                        fontSize: 36.0,
+                        fontSize: 32.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -98,11 +117,11 @@ class TotalsPanelPlaceholder extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(width: AppSpacing.m),
-                // Botón Checkout F12
+                // Botón Cobrar
                 CFButton(
                   label: 'COBRAR (F12)',
-                  variant: ButtonVariant.secondary, // Botón llamativo
-                  onPressed: () {},
+                  variant: ButtonVariant.secondary,
+                  onPressed: onCheckout,
                 ),
               ],
             ),

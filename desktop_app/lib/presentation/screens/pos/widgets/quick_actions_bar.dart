@@ -16,15 +16,14 @@ class QuickActionsBar extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final List<Map<String, String>> shortcuts = [
+      {'key': 'ENTER', 'desc': 'Agregar producto'},
+      {'key': 'DEL', 'desc': 'Eliminar'},
+      {'key': 'ESC', 'desc': 'Cancelar selección'},
       {'key': 'F2', 'desc': 'Cliente'},
       {'key': 'F3', 'desc': 'Consulta'},
       {'key': 'F6', 'desc': 'Suspender'},
       {'key': 'F7', 'desc': 'Recuperar'},
-      {'key': 'F8', 'desc': 'Catálogo'},
-      {'key': 'F11', 'desc': 'Caja'},
       {'key': 'F12', 'desc': 'Cobrar'},
-      {'key': 'DEL', 'desc': 'Borrar Fila'},
-      {'key': 'ESC', 'desc': 'Salir/Atrás'},
     ];
 
     return Container(
