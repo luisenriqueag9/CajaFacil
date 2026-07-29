@@ -3,19 +3,21 @@ import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text_styles.dart';
 import '../../../components/inputs/cf_search_field.dart';
 
-/// ProductSearchArea: Panel superior de la pantalla de venta que gestiona el foco y la entrada.
+/// ProductSearchArea: Panel superior de la pantalla de venta que gestiona el buscador.
 class ProductSearchArea extends StatelessWidget {
   const ProductSearchArea({
     super.key,
     required this.focusNode,
     required this.controller,
     required this.onSubmitted,
+    required this.onChanged,
     this.onClear,
   });
 
   final FocusNode focusNode;
   final TextEditingController controller;
   final ValueChanged<String> onSubmitted;
+  final ValueChanged<String> onChanged;
   final VoidCallback? onClear;
 
   @override
@@ -62,6 +64,7 @@ class ProductSearchArea extends StatelessWidget {
           controller: controller,
           focusNode: focusNode,
           onSubmitted: onSubmitted,
+          onChanged: onChanged,
           onClear: onClear,
           placeholder: 'Escanee código de barra o busque producto aquí... (F8 para catálogo)',
         ),
