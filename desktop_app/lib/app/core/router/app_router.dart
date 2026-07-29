@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../modules/auth/presentation/pages/login_page.dart';
 import '../../modules/dashboard/presentation/pages/dashboard_page.dart';
 import '../../shared/pages/module_placeholder_page.dart';
+import '../../../../presentation/screens/pos/pos_screen.dart';
 import '../config/app_config.dart';
 import 'app_routes.dart';
 
@@ -50,11 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.ventas,
-        builder: (context, state) => const ModulePlaceholderPage(
-          title: 'Ventas',
-          description: 'Registra y consulta las ventas del negocio.',
-          icon: Icons.point_of_sale_rounded,
-        ),
+        builder: (context, state) => const PosScreen(),
       ),
       GoRoute(
         path: AppRoutes.reportes,
