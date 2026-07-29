@@ -7,6 +7,7 @@ import '../../modules/dashboard/presentation/pages/dashboard_page.dart';
 import '../../shared/pages/module_placeholder_page.dart';
 import '../../../../presentation/screens/pos/pos_screen.dart';
 import '../config/app_config.dart';
+import '../di/dependency_container.dart';
 import 'app_routes.dart';
 
 // Riverpod Provider for GoRouter configuration
@@ -51,7 +52,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.ventas,
-        builder: (context, state) => const PosScreen(),
+        builder: (context, state) => PosScreen(
+          productSearchRepository: DependencyContainer.productSearchRepository,
+        ),
       ),
       GoRoute(
         path: AppRoutes.reportes,

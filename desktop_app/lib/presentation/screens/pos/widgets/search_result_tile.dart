@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/app_text_styles.dart';
-import '../../../mock/mock_products.dart';
+import '../../../../app/modules/product/presentation/models/product_search_result.dart';
 
 /// SearchResultTile: Celda de resultado individual en el panel de autocompletado.
 class SearchResultTile extends StatelessWidget {
@@ -12,7 +12,7 @@ class SearchResultTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final MockProduct product;
+  final ProductSearchResult product;
   final bool isHighlighted;
   final VoidCallback onTap;
 

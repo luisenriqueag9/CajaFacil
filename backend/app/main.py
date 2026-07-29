@@ -153,6 +153,8 @@ app.include_router(
     tags=["Créditos"],
 )
 # Note: Register modular routers here
-# Example:
-# from app.modules.product.presentation.routes import router as product_router
-# app.include_router(product_router, prefix="/api/v1/products", tags=["Product"])
+from app.modules.product.presentation.routers.product_router import router as product_router
+from app.modules.product.presentation.routers.pos_router import router as pos_router
+
+app.include_router(product_router, prefix="/api/v1/products", tags=["Products"])
+app.include_router(pos_router, prefix="/api/v1/pos", tags=["POS"])

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/modules/product/domain/repositories/product_search_repository.dart';
 import 'widgets/pos_shell.dart';
 
 /// PosScreen: Pantalla principal que sirve como punto de entrada para la terminal del POS.
@@ -7,14 +8,21 @@ import 'widgets/pos_shell.dart';
 /// - Inicializar y estructurar la interfaz del mostrador.
 /// - Asegurar el foco por defecto y la captura de teclado.
 class PosScreen extends StatelessWidget {
-  const PosScreen({super.key});
+  final ProductSearchRepository productSearchRepository;
+
+  const PosScreen({
+    super.key,
+    required this.productSearchRepository,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: FocusScope(
         autofocus: true,
-        child: PosShell(),
+        child: PosShell(
+          productSearchRepository: productSearchRepository,
+        ),
       ),
     );
   }

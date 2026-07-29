@@ -1,4 +1,4 @@
-import '../../../mock/mock_products.dart';
+import '../../../../app/modules/product/presentation/models/product_search_result.dart';
 
 /// CartItem: Modelo de línea del carrito de compras para el POS.
 class CartItem {
@@ -9,7 +9,7 @@ class CartItem {
     this.observation = '',
   });
 
-  final MockProduct product;
+  final ProductSearchResult product;
   double quantity;
   double discount;
   String observation;

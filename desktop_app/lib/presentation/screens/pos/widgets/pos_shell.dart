@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:dio/dio.dart';
+import '../../../../app/modules/product/domain/repositories/product_search_repository.dart';
+import '../../../../app/modules/product/presentation/models/product_search_result.dart';
 import '../../../theme/app_spacing.dart';
-import '../../../mock/mock_products.dart';
 import '../../../components/navigation/cf_top_bar.dart';
 import '../../../components/feedback/cf_toast.dart';
 import 'cart_item.dart';
@@ -19,7 +22,12 @@ import 'edit_cart_item_dialog.dart';
 /// - Controlar la grilla de ventas, totales e interacción de búsqueda en tiempo real.
 /// - Implementar atajos de teclado y navegación del panel flotante de autocompletado.
 class PosShell extends StatefulWidget {
-  const PosShell({super.key});
+  final ProductSearchRepository productSearchRepository;
+
+  const PosShell({
+    super.key,
+    required this.productSearchRepository,
+  });
 
   @override
   State<PosShell> createState() => _PosShellState();
@@ -34,8 +42,11 @@ class _PosShellState extends State<PosShell> {
   int? _selectedIndex;
 
   // Estado de Búsqueda Inteligente
-  final List<MockProduct> _suggestions = [];
+  final List<ProductSearchResult> _suggestions = [];
   int? _highlightedSuggestionIndex;
+
+  Timer? _debounceTimer;
+  CancelToken? _cancelToken;
 
   @override
   void initState() {
@@ -47,6 +58,8 @@ class _PosShellState extends State<PosShell> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
+    _cancelToken?.cancel('Widget disposed');
     _searchFocusNode.dispose();
     _searchController.dispose();
     super.dispose();
@@ -56,57 +69,129 @@ class _PosShellState extends State<PosShell> {
     _searchFocusNode.requestFocus();
   }
 
-  // Filtrado de productos en tiempo real
+  // Filtrado de productos en tiempo real con debouncing y CancelToken
   void _onSearchChanged(String query) {
-    setState(() {
-      _suggestions.clear();
-      _highlightedSuggestionIndex = null;
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    final cleanQuery = query.trim();
 
-      final cleanQuery = query.trim();
-      if (cleanQuery.isNotEmpty) {
-        // Filtrar productos según coincidencias (código, código parcial, o nombre)
-        final matches = MockProductsCatalog.products.where((product) {
-          final codeMatch = product.code.startsWith(cleanQuery) || product.code == cleanQuery;
-          final nameMatch = product.name.toLowerCase().contains(cleanQuery.toLowerCase());
-          return codeMatch || nameMatch;
-        }).toList();
-
-        _suggestions.addAll(matches);
-      }
-    });
-  }
-
-  // Agrega un producto por su código
-  void _addProduct(String code) {
-    final String cleanCode = code.trim();
-    if (cleanCode.isEmpty) return;
-
-    final product = MockProductsCatalog.findByCode(cleanCode);
-    if (product == null) {
-      CFToast.show(
-        context,
-        message: 'No se encontró el producto.',
-        type: ToastType.error,
-      );
-    } else {
+    if (cleanQuery.isEmpty) {
+      _cancelToken?.cancel('Query cleared');
+      _cancelToken = null;
       setState(() {
-        final existingIndex = _cartItems.indexWhere((item) => item.product.code == product.code);
-        if (existingIndex != -1) {
-          _cartItems[existingIndex].quantity += 1.0;
-        } else {
-          _cartItems.add(CartItem(product: product));
-        }
-        _selectedIndex = null;
-        // Cerrar panel de sugerencias
         _suggestions.clear();
         _highlightedSuggestionIndex = null;
       });
+      return;
     }
 
-    _searchController.clear();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _requestFocus();
+    _debounceTimer = Timer(const Duration(milliseconds: 200), () {
+      _executeSearch(cleanQuery);
     });
+  }
+
+  Future<void> _executeSearch(String query) async {
+    _cancelToken?.cancel('New query initiated');
+    _cancelToken = CancelToken();
+    final currentToken = _cancelToken!;
+
+    try {
+      final results = await widget.productSearchRepository.search(
+        query,
+        cancelToken: currentToken,
+      );
+
+      if (currentToken == _cancelToken && mounted) {
+        setState(() {
+          _suggestions.clear();
+          _suggestions.addAll(results);
+          _highlightedSuggestionIndex = null;
+        });
+      }
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) {
+        return;
+      }
+      if (mounted) {
+        CFToast.show(
+          context,
+          message: 'Error al conectar con el catálogo.',
+          type: ToastType.error,
+        );
+        _requestFocus();
+      }
+    } catch (e) {
+      if (mounted) {
+        CFToast.show(
+          context,
+          message: 'Error al conectar con el catálogo.',
+          type: ToastType.error,
+        );
+        _requestFocus();
+      }
+    }
+  }
+
+  // Agrega un producto por su código consultando al backend
+  Future<void> _addProduct(String code) async {
+    final String cleanCode = code.trim();
+    if (cleanCode.isEmpty) return;
+
+    // Cancel dynamic suggestion debouncer and clear overlay suggestions immediately
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    _cancelToken?.cancel('Product added by code');
+    _cancelToken = null;
+    setState(() {
+      _suggestions.clear();
+      _highlightedSuggestionIndex = null;
+    });
+
+    try {
+      final results = await widget.productSearchRepository.search(cleanCode);
+      if (results.isEmpty) {
+        if (mounted) {
+          CFToast.show(
+            context,
+            message: 'No se encontró el producto.',
+            type: ToastType.error,
+          );
+        }
+        return;
+      }
+
+      // Exact match check on code
+      final exactProduct = results.firstWhere(
+        (p) => p.code.toLowerCase() == cleanCode.toLowerCase(),
+        orElse: () => results.first,
+      );
+
+      if (mounted) {
+        setState(() {
+          final existingIndex = _cartItems.indexWhere(
+              (item) => item.product.code.toLowerCase() == exactProduct.code.toLowerCase());
+          if (existingIndex != -1) {
+            _cartItems[existingIndex].quantity += 1.0;
+          } else {
+            _cartItems.add(CartItem(product: exactProduct));
+          }
+          _selectedIndex = null;
+          _suggestions.clear();
+          _highlightedSuggestionIndex = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        CFToast.show(
+          context,
+          message: 'Error al conectar con el catálogo.',
+          type: ToastType.error,
+        );
+      }
+    } finally {
+      _searchController.clear();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _requestFocus();
+      });
+    }
   }
 
   // Navegación de sugerencias o del carrito de compras

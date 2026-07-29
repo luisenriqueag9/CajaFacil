@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_radius.dart';
-import '../../../mock/mock_products.dart';
+import '../../../../app/modules/product/presentation/models/product_search_result.dart';
 import 'search_result_tile.dart';
 
 /// ProductSearchOverlay: Panel flotante de autocompletado del POS.
@@ -15,9 +15,9 @@ class ProductSearchOverlay extends StatelessWidget {
     required this.onSuggestionSelected,
   });
 
-  final List<MockProduct> suggestions;
+  final List<ProductSearchResult> suggestions;
   final int? highlightedIndex;
-  final ValueChanged<MockProduct> onSuggestionSelected;
+  final ValueChanged<ProductSearchResult> onSuggestionSelected;
 
   @override
   Widget build(BuildContext context) {
